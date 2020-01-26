@@ -61,16 +61,15 @@ To get started, check out the [usage documentation](https://github.com/ServiceSt
 
 ## Documentation and Tutorials
 
-The documentation and all related links are available as part of the [README.md](https://github.com/ServiceStack/ServiceStack.OrmLite/blob/master/README.md) in the  source repository.
+The documentation and all related links are available as part of the [README.md](https://github.com/ServiceStack/ServiceStack.OrmLite/blob/master/README.md) in the source repository.
 
 There is also an [extensive set of unit tests](https://github.com/ServiceStack/ServiceStack.OrmLite/tree/master/tests) available in the repository that can help to further address solving specific use-cases.
 
 ## Bug Reporting
 
-Bugs can be reported at https://forums.servicestack.net/.
+Bugs can be reported on the [ServiceStack Forums](https://forums.servicestack.net/).
 
 ## Licensing
 
-Since September 2013, ServiceStack source code is available under the GNU Affero General Public 
-License/FOSS License Exception, see [license.txt](https://github.com/ServiceStack/ServiceStack.OrmLite/blob/master/license.txt) in the source repository.
+Since September 2013, ServiceStack source code is available under the GNU Affero General Public License/FOSS License Exception, see [license.txt](https://github.com/ServiceStack/ServiceStack.OrmLite/blob/master/license.txt) in the source repository.
 Alternative [commercial licensing](https://servicestack.net/ormlite) is also available.
