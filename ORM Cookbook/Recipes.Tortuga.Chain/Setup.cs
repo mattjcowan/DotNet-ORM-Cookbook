@@ -10,9 +10,8 @@ namespace Recipes.Chain
     [TestClass]
     public class Setup
     {
-#nullable disable
-        internal static SqlServerDataSource PrimaryDataSource { get; private set; }
-#nullable enable
+        internal static SqlServerDataSource PrimaryDataSource { get; private set; } = null!;
+        internal static string SqlServerConnectionString { get; private set; } = null!;
 
         [AssemblyCleanup]
         public static void AssemblyCleanup()
@@ -23,9 +22,11 @@ namespace Recipes.Chain
         [SuppressMessage("Usage", "CA1801")]
         public static void AssemblyInit(TestContext context)
         {
-            var configuration = new ConfigurationBuilder().SetBasePath(AppContext.BaseDirectory).AddJsonFile("appsettings.json").Build();
-            var sqlServerConnectionString = configuration.GetSection("ConnectionStrings")["SqlServerTestDatabase"];
-            PrimaryDataSource = new SqlServerDataSource(sqlServerConnectionString);
+            var configuration = new ConfigurationBuilder().SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("appsettings.json").Build();
+
+            SqlServerConnectionString = configuration.GetSection("ConnectionStrings")["SqlServerTestDatabase"];
+            PrimaryDataSource = new SqlServerDataSource(SqlServerConnectionString);
 
             try
             {
@@ -39,7 +40,8 @@ namespace Recipes.Chain
         {
             //Preload all of the database metadata to warmup the data source
             PrimaryDataSource.DatabaseMetadata.Preload();
-            PrimaryDataSource.From("HR.EmployeeClassification", "1=0").Compile().ToObject<EmployeeClassification>(RowOptions.AllowEmptyResults).Execute();
+            PrimaryDataSource.From("HR.EmployeeClassification", "1=0").Compile()
+                .ToObjectOrNull<EmployeeClassification>().Execute();
         }
     }
 }

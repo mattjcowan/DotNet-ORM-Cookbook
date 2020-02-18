@@ -8,7 +8,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>TryGet/Update/Delete Operations - The .NET Core ORM Cookbook</title>
+    <title>Handling failures and exceptions - The .NET Core ORM Cookbook</title>
     <link rel="shortcut icon" href="favicon.ico">
     <link rel="stylesheet" href="css/theme.css" type="text/css" />
     <link rel="stylesheet" href="css/theme_colors.css" type="text/css" />
@@ -36,13 +36,18 @@
 </li>
 <li class="tocentry"><a href="FAQ.htm">FAQ</a>
 </li>
-<li class="tocentry"><a href="SingleModelCrud.htm">Single Model CRUD</a>
+<li class="tocentry">
+<ul>
+<li><span class="navigationgroup"><i class="fa fa-caret-down"></i> <a href="StandardCRUDscenarios.htm">Standard CRUD scenarios</a></span></li>
+<li class="tocentry"><a href="SingleModelCrud.htm">Operations on a single entity type</a>
 </li>
-<li class="tocentry"><a href="ModelWithChildren.htm">Model with Children CRUD</a>
+<li class="tocentry"><a href="MultipleCrud.htm">Operations on sets</a>
 </li>
-<li class="tocentry"><a href="SingleModelCrudAsync.htm">Async Operations</a>
+<li class="tocentry"><a href="ModelWithChildren.htm">Operations on a graph of multiple entity types</a>
 </li>
-<li class="tocentry current"><a class="current" href="TryCrud.htm">TryGet/Update/Delete Operations</a>
+<li class="tocentry"><a href="Immutable.htm">Operations on immutable entities</a>
+</li>
+<li class="tocentry current"><a class="current" href="TryCrud.htm">Handling failures and exceptions</a>
 <ul class="currentrelative">
 <li class="tocentry"><a href="#scenario-prototype">Scenario Prototype</a></li>
 
@@ -69,38 +74,26 @@
 
 
 </ul>
-<li class="tocentry"><a href="Upsert.htm">Upsert</a>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="OperationswithaForeignKeybasedLookupTable.htm">Operations with a Foreign Key based Lookup Table</a></span>
 </li>
-<li class="tocentry"><a href="PartialUpdate.htm">Partial Updates</a>
-</li>
-<li class="tocentry"><a href="Immutable.htm">Immutable CRUD</a>
-</li>
-<li class="tocentry"><a href="MultipleCrud.htm">CRUD Operations on Multiple Objects</a>
-</li>
-<li class="tocentry"><a href="LargeBatch.htm">Batch Inserts with Large Collections</a>
-</li>
-<li class="tocentry"><a href="BulkInsert.htm">Bulk Inserts</a>
-</li>
-<li class="tocentry"><a href="Joins.htm">Projecting with a Join</a>
-</li>
-<li class="tocentry"><a href="Views.htm">Reading from Views</a>
-</li>
-<li class="tocentry"><a href="ScalarValue.htm">Reading a Salar Value from a Row</a>
-</li>
-<li class="tocentry"><a href="RowCount.htm">Row Counts</a>
-</li>
-<li class="tocentry"><a href="Sorting.htm">Basic Sorting</a>
-</li>
-<li class="tocentry"><a href="Pagination.htm">Paging Results</a>
-</li>
-<li class="tocentry"><a href="PopulateDataTable.htm">Populate DataTable</a>
+
+</ul>
 </li>
 <li class="tocentry">
-<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="ForeignKeytoLookupTableCRUD.htm">Foreign Key to Lookup Table CRUD</a></span>
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Fetchingdatascenarios.htm">Fetching data scenarios</a></span>
 </li>
-<li class="tocentry"><a href="BasicStoredProc.htm">Basic Stored Procedures</a>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Advancedscenarios.htm">Advanced scenarios</a></span>
 </li>
-<li class="tocentry"><a href="Transactions.htm">Working with Transactions</a>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Sortingscenarios.htm">Sorting scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Storedprocedurescenarios.htm">Stored procedure scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Auditingandhistoryscenarios.htm">Auditing and history scenarios</a></span>
 </li>
 </ul>
 				<div class="toc-footer">
@@ -120,7 +113,7 @@
             <div class="nav-content">
                 <div role="navigation" aria-label="breadcrumbs navigation">
                     <div class="breadcrumbs">
-<ul><li><a href="index.htm">Home</a></li> / <li><a href="TryCrud.htm">TryGet/Update/Delete Operations</a></li></ul>
+<ul><li><a href="index.htm">Home</a></li> / <li><a href="StandardCRUDscenarios.htm">Standard CRUD scenarios</a></li> / <li><a href="TryCrud.htm">Handling failures and exceptions</a></li></ul>
 					
                     </div>
                     <hr />
@@ -197,7 +190,7 @@
 
 <h2 id="ado.net">ADO.NET<a class="headerlink" href="#ado.net" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <p>The trick to the <code>Update</code> and <code>Delete</code> methods is to read back the row counts from <code>ExecuteNonQuery</code>.</p>
-<pre><code class="cs">public class TryCrudScenario : ScenarioBase, ITryCrudScenario&lt;EmployeeClassification&gt;
+<pre><code class="cs">public class TryCrudScenario : SqlServerScenarioBase, ITryCrudScenario&lt;EmployeeClassification&gt;
 {
     public TryCrudScenario(string connectionString) : base(connectionString)
     { }
@@ -416,7 +409,6 @@
 <h2 id="chain">Chain<a class="headerlink" href="#chain" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <pre><code class="cs">public class TryCrudScenario : ITryCrudScenario&lt;EmployeeClassification&gt;
 {
-    const string TableName = &quot;HR.EmployeeClassification&quot;;
     readonly SqlServerDataSource m_DataSource;
 
     public TryCrudScenario(SqlServerDataSource dataSource)
@@ -434,14 +426,14 @@
 
     public void DeleteByKeyOrException(int employeeClassificationKey)
     {
-        var count = m_DataSource.DeleteByKey(TableName, employeeClassificationKey).Execute();
+        var count = m_DataSource.DeleteByKey&lt;EmployeeClassification&gt;(employeeClassificationKey).Execute();
         if (count == 0)
             throw new MissingDataException();
     }
 
     public bool DeleteByKeyWithStatus(int employeeClassificationKey)
     {
-        return 1 == m_DataSource.DeleteByKey(TableName, employeeClassificationKey).Execute();
+        return 1 == m_DataSource.DeleteByKey&lt;EmployeeClassification&gt;(employeeClassificationKey).Execute();
     }
 
     public void DeleteOrException(EmployeeClassification classification)
@@ -464,22 +456,24 @@
 
     public EmployeeClassification FindByNameOrException(string employeeClassificationName)
     {
-        return m_DataSource.From(TableName, new { employeeClassificationName }).ToObject&lt;EmployeeClassification&gt;().NeverNull().Execute();
+        return m_DataSource.From&lt;EmployeeClassification&gt;(new { employeeClassificationName })
+            .ToObject().Execute();
     }
 
     public EmployeeClassification? FindByNameOrNull(string employeeClassificationName)
     {
-        return m_DataSource.From(TableName, new { employeeClassificationName }).ToObject&lt;EmployeeClassification&gt;(RowOptions.AllowEmptyResults).Execute();
+        return m_DataSource.From&lt;EmployeeClassification&gt;(new { employeeClassificationName })
+            .ToObjectOrNull().Execute();
     }
 
     public EmployeeClassification GetByKeyOrException(int employeeClassificationKey)
     {
-        return m_DataSource.GetByKey(TableName, employeeClassificationKey).ToObject&lt;EmployeeClassification&gt;().NeverNull().Execute();
+        return m_DataSource.GetByKey&lt;EmployeeClassification&gt;(employeeClassificationKey).ToObject().Execute();
     }
 
     public EmployeeClassification? GetByKeyOrNull(int employeeClassificationKey)
     {
-        return m_DataSource.GetByKey(TableName, employeeClassificationKey).ToObject&lt;EmployeeClassification&gt;(RowOptions.AllowEmptyResults).Execute();
+        return m_DataSource.GetByKey&lt;EmployeeClassification&gt;(employeeClassificationKey).ToObjectOrNull().Execute();
     }
 
     public void UpdateOrException(EmployeeClassification classification)
@@ -513,12 +507,8 @@
         if (classification == null)
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
-        var sql = @&quot;INSERT INTO HR.EmployeeClassification (EmployeeClassificationName)
-                    OUTPUT Inserted.EmployeeClassificationKey
-                    VALUES(@EmployeeClassificationName )&quot;;
-
         using (var con = OpenConnection())
-            return con.ExecuteScalar&lt;int&gt;(sql, classification);
+            return (int)con.Insert(classification);
     }
 
     public void DeleteByKeyOrException(int employeeClassificationKey)
@@ -1114,7 +1104,8 @@
         {
             // delete directly
             int count = adapter.DeleteEntitiesDirectly(typeof(EmployeeClassificationEntity),
-                                           new RelationPredicateBucket(EmployeeClassificationFields.EmployeeClassificationKey.Equal(employeeClassificationKey)));
+                                           new RelationPredicateBucket(EmployeeClassificationFields.EmployeeClassificationKey
+                                                                                       .Equal(employeeClassificationKey)));
             if (count &lt;= 0)
             {
                 throw new DataException($&quot;No row was found for key {employeeClassificationKey}.&quot;);
@@ -1128,7 +1119,8 @@
         {
             // delete directly
             int count = adapter.DeleteEntitiesDirectly(typeof(EmployeeClassificationEntity),
-                                                       new RelationPredicateBucket(EmployeeClassificationFields.EmployeeClassificationKey.Equal(employeeClassificationKey)));
+                                                       new RelationPredicateBucket(EmployeeClassificationFields.EmployeeClassificationKey
+                                                                                                   .Equal(employeeClassificationKey)));
             return count &gt; 0;
         }
     }
@@ -1164,7 +1156,8 @@
     {
         using (var adapter = new DataAccessAdapter())
         {
-            return new LinqMetaData(adapter).EmployeeClassification.Single(ec =&gt; ec.EmployeeClassificationName == employeeClassificationName);
+            return new LinqMetaData(adapter).EmployeeClassification
+                                .Single(ec =&gt; ec.EmployeeClassificationName == employeeClassificationName);
         }
     }
 
@@ -1172,7 +1165,8 @@
     {
         using (var adapter = new DataAccessAdapter())
         {
-            return new LinqMetaData(adapter).EmployeeClassification.SingleOrDefault(ec =&gt; ec.EmployeeClassificationName == employeeClassificationName);
+            return new LinqMetaData(adapter).EmployeeClassification
+                                .SingleOrDefault(ec =&gt; ec.EmployeeClassificationName == employeeClassificationName);
         }
     }
 
@@ -1180,7 +1174,9 @@
     {
         using (var adapter = new DataAccessAdapter())
         {
-            var ec = adapter.FetchNewEntity&lt;EmployeeClassificationEntity&gt;(new RelationPredicateBucket(EmployeeClassificationFields.EmployeeClassificationKey.Equal(employeeClassificationKey)));
+            var ec = adapter.FetchNewEntity&lt;EmployeeClassificationEntity&gt;(
+                                    new RelationPredicateBucket(EmployeeClassificationFields.EmployeeClassificationKey
+                                                                                            .Equal(employeeClassificationKey)));
             if (ec.IsNew)
             {
                 throw new DataException($&quot;No row was found for key {employeeClassificationKey}.&quot;);
@@ -1193,7 +1189,9 @@
     {
         using (var adapter = new DataAccessAdapter())
         {
-            var ec = adapter.FetchNewEntity&lt;EmployeeClassificationEntity&gt;(new RelationPredicateBucket(EmployeeClassificationFields.EmployeeClassificationKey.Equal(employeeClassificationKey)));
+            var ec = adapter.FetchNewEntity&lt;EmployeeClassificationEntity&gt;(
+                                    new RelationPredicateBucket(EmployeeClassificationFields.EmployeeClassificationKey
+                                                                                            .Equal(employeeClassificationKey)));
             return ec.IsNew ? null : ec;
         }
     }
@@ -1205,8 +1203,9 @@
 
         using (var adapter = new DataAccessAdapter())
         {
-            var toPersist = adapter.FetchNewEntity&lt;EmployeeClassificationEntity&gt;(new RelationPredicateBucket(
-                                                                EmployeeClassificationFields.EmployeeClassificationKey.Equal(classification.EmployeeClassificationKey)));
+            var toPersist = adapter.FetchNewEntity&lt;EmployeeClassificationEntity&gt;(
+                                    new RelationPredicateBucket(EmployeeClassificationFields.EmployeeClassificationKey
+                                                                                            .Equal(classification.EmployeeClassificationKey)));
             if (!toPersist.IsNew)
             {
                 toPersist.EmployeeClassificationName = classification.EmployeeClassificationName;
@@ -1228,8 +1227,9 @@
 
         using (var adapter = new DataAccessAdapter())
         {
-            var toPersist = adapter.FetchNewEntity&lt;EmployeeClassificationEntity&gt;(new RelationPredicateBucket(
-                                                 EmployeeClassificationFields.EmployeeClassificationKey.Equal(classification.EmployeeClassificationKey)));
+            var toPersist = adapter.FetchNewEntity&lt;EmployeeClassificationEntity&gt;(
+                                    new RelationPredicateBucket(EmployeeClassificationFields.EmployeeClassificationKey
+                                                                                            .Equal(classification.EmployeeClassificationKey)));
             if (!toPersist.IsNew)
             {
                 toPersist.EmployeeClassificationName = classification.EmployeeClassificationName;

@@ -11,10 +11,11 @@ namespace Recipes.EntityFramework
     [TestClass]
     public class Setup
     {
-#nullable disable
-        internal static Func<OrmCookbookContext> DBContextFactory { get; private set; }
-        internal static Func<OrmCookbookContext> LazyLoadingDBContextFactory { get; private set; }
-#nullable enable
+        internal static Func<OrmCookbookContext> DBContextFactory { get; private set; } = null!;
+        internal static Func<User, OrmCookbookContextWithUser> DBContextWithUserFactory { get; private set; } = null!;
+        internal static Func<OrmCookbookContextWithSoftDelete> DBContextWithSoftDelete { get; private set; } = null!;
+        internal static Func<OrmCookbookContext> LazyLoadingDBContextFactory { get; private set; } = null!;
+        internal static string SqlServerConnectionString { get; private set; } = null!;
 
         [AssemblyCleanup]
         public static void AssemblyCleanup()
@@ -26,11 +27,13 @@ namespace Recipes.EntityFramework
         public static void AssemblyInit(TestContext context)
         {
             var configuration = new ConfigurationBuilder().SetBasePath(AppContext.BaseDirectory).AddJsonFile("appsettings.json").Build();
-            var sqlServerConnectionString = configuration.GetSection("ConnectionStrings")["SqlServerTestDatabase"];
+            SqlServerConnectionString = configuration.GetSection("ConnectionStrings")["SqlServerTestDatabase"];
 
-            DBContextFactory = () => new OrmCookbookContext(sqlServerConnectionString, false);
+            DBContextFactory = () => new OrmCookbookContext(SqlServerConnectionString, false);
+            DBContextWithUserFactory = (User u) => new OrmCookbookContextWithUser(SqlServerConnectionString, false, u);
+            DBContextWithSoftDelete = () => new OrmCookbookContextWithSoftDelete(SqlServerConnectionString, false);
 
-            LazyLoadingDBContextFactory = () => new OrmCookbookContext(sqlServerConnectionString, true);
+            LazyLoadingDBContextFactory = () => new OrmCookbookContext(SqlServerConnectionString, true);
 
             try
             {

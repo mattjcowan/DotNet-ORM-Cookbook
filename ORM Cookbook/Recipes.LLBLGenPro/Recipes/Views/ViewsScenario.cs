@@ -26,7 +26,9 @@ namespace Recipes.LLBLGenPro.Views
         {
             using (var adapter = new DataAccessAdapter())
             {
-                return new LinqMetaData(adapter).EmployeeDetail.Where(x => x.EmployeeClassificationKey == employeeClassificationKey).ToList();
+                return new LinqMetaData(adapter).EmployeeDetail
+                                                .Where(x => x.EmployeeClassificationKey == employeeClassificationKey)
+                                                .ToList();
             }
         }
 
@@ -34,15 +36,9 @@ namespace Recipes.LLBLGenPro.Views
         {
             using (var adapter = new DataAccessAdapter())
             {
-                return new LinqMetaData(adapter).EmployeeDetail.Where(x => x.LastName == lastName).ToList();
-            }
-        }
-
-        public IList<EmployeeDetailEntity> GetAll()
-        {
-            using (var adapter = new DataAccessAdapter())
-            {
-                return new LinqMetaData(adapter).EmployeeDetail.ToList();
+                return new LinqMetaData(adapter).EmployeeDetail
+                                                .Where(x => x.LastName == lastName)
+                                                .ToList();
             }
         }
 
@@ -50,7 +46,8 @@ namespace Recipes.LLBLGenPro.Views
         {
             using (var adapter = new DataAccessAdapter())
             {
-                return new LinqMetaData(adapter).EmployeeDetail.SingleOrDefault(x => x.EmployeeKey == employeeKey);
+                return new LinqMetaData(adapter).EmployeeDetail
+                                                .SingleOrDefault(x => x.EmployeeKey == employeeKey);
             }
         }
 
@@ -58,7 +55,8 @@ namespace Recipes.LLBLGenPro.Views
         {
             using (var adapter = new DataAccessAdapter())
             {
-                return new LinqMetaData(adapter).EmployeeClassification.FirstOrDefault(ec => ec.EmployeeClassificationKey == employeeClassificationKey);
+                return new LinqMetaData(adapter).EmployeeClassification
+                                                .FirstOrDefault(ec => ec.EmployeeClassificationKey == employeeClassificationKey);
             }
         }
     }

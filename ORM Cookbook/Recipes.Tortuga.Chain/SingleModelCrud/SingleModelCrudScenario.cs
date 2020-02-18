@@ -8,7 +8,6 @@ namespace Recipes.Chain.SingleModelCrud
 {
     public class SingleModelCrudScenario : ISingleModelCrudScenario<EmployeeClassification>
     {
-        const string TableName = "HR.EmployeeClassification";
         readonly SqlServerDataSource m_DataSource;
 
         public SingleModelCrudScenario(SqlServerDataSource dataSource)
@@ -34,22 +33,24 @@ namespace Recipes.Chain.SingleModelCrud
 
         public void DeleteByKey(int employeeClassificationKey)
         {
-            m_DataSource.DeleteByKey(TableName, employeeClassificationKey).Execute();
+            m_DataSource.DeleteByKey<EmployeeClassification>(employeeClassificationKey).Execute();
         }
 
         public EmployeeClassification FindByName(string employeeClassificationName)
         {
-            return m_DataSource.From(TableName, new { employeeClassificationName }).ToObject<EmployeeClassification>().NeverNull().Execute();
+            return m_DataSource.From<EmployeeClassification>(new { employeeClassificationName })
+                .ToObject().Execute();
         }
 
         public IList<EmployeeClassification> GetAll()
         {
-            return m_DataSource.From(TableName).ToCollection<EmployeeClassification>().Execute();
+            return m_DataSource.From<EmployeeClassification>().ToCollection().Execute();
         }
 
         public EmployeeClassification GetByKey(int employeeClassificationKey)
         {
-            return m_DataSource.GetByKey(TableName, employeeClassificationKey).ToObject<EmployeeClassification>().NeverNull().Execute();
+            return m_DataSource.GetByKey<EmployeeClassification>(employeeClassificationKey)
+                .ToObject().Execute();
         }
 
         public void Update(EmployeeClassification classification)

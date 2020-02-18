@@ -1,44 +1,51 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 
 namespace Recipes.Sorting
 {
     /// <summary>
     /// This scenario performs basic CRUD operations on a model containing a foreign key represented by an integer.
     /// </summary>
-    /// <typeparam name="TModel">An Employee model or entity</typeparam>
+    /// <typeparam name="TEmployeeSimple">An Employee model or entity</typeparam>
     [TestCategory("Sorting")]
-    public abstract class SortingTests<TModel> : TestBase
-    where TModel : class, IEmployeeSimple, new()
+    public abstract class SortingTests<TEmployeeSimple> : TestBase
+    where TEmployeeSimple : class, IEmployeeSimple, new()
     {
+        const int RowCount = 10;
+
         [TestMethod]
-        public void SortByLastName()
+        public void SortByFirstName()
         {
             var repository = GetScenario();
 
             //Ensure some records exist
-            CreateEmployees(repository);
+            var batchKey = Guid.NewGuid().ToString();
+            var originals = BuildEmployees(RowCount, batchKey);
+            repository.InsertBatch(originals);
 
-            var results = repository.SortByLastName();
+            var results = repository.SortByFirstName(batchKey);
             for (var i = 1; i < results.Count; i++)
             {
-                Assert.IsTrue(string.Compare(results[i - 1].LastName, results[i].LastName, StringComparison.OrdinalIgnoreCase) <= 0);
+                Assert.IsTrue(string.Compare(results[i - 1].FirstName, results[i].FirstName, StringComparison.OrdinalIgnoreCase) <= 0);
             }
         }
 
         [TestMethod]
-        public void SortByLastNameDescFirstName()
+        public void SortByMiddleNameDescFirstName()
         {
             var repository = GetScenario();
 
             //Ensure some records exist
-            CreateEmployees(repository);
+            var batchKey = Guid.NewGuid().ToString();
+            var originals = BuildEmployees(RowCount, batchKey);
+            repository.InsertBatch(originals);
 
-            var results = repository.SortByLastNameDescFirstName();
+            var results = repository.SortByMiddleNameDescFirstName(batchKey);
             for (var i = 1; i < results.Count; i++)
             {
-                Assert.IsTrue(string.Compare(results[i - 1].LastName, results[i].LastName, StringComparison.OrdinalIgnoreCase) >= 0);
-                if (string.Equals(results[i - 1].LastName, results[i].LastName, StringComparison.OrdinalIgnoreCase))
+                Assert.IsTrue(string.Compare(results[i - 1].MiddleName, results[i].MiddleName, StringComparison.OrdinalIgnoreCase) >= 0);
+                if (string.Equals(results[i - 1].MiddleName, results[i].MiddleName, StringComparison.OrdinalIgnoreCase))
                 {
                     Assert.IsTrue(string.Compare(results[i - 1].FirstName, results[i].FirstName, StringComparison.OrdinalIgnoreCase) <= 0);
                 }
@@ -46,42 +53,42 @@ namespace Recipes.Sorting
         }
 
         [TestMethod]
-        public void SortByLastNameFirstName()
+        public void SortByMiddleNameFirstName()
         {
             var repository = GetScenario();
 
             //Ensure some records exist
-            CreateEmployees(repository);
+            var batchKey = Guid.NewGuid().ToString();
+            var originals = BuildEmployees(RowCount, batchKey);
+            repository.InsertBatch(originals);
 
-            var results = repository.SortByLastNameFirstName();
+            var results = repository.SortByMiddleNameFirstName(batchKey);
             for (var i = 1; i < results.Count; i++)
             {
-                Assert.IsTrue(string.Compare(results[i - 1].LastName, results[i].LastName, StringComparison.OrdinalIgnoreCase) <= 0);
-                if (string.Equals(results[i - 1].LastName, results[i].LastName, StringComparison.OrdinalIgnoreCase))
+                Assert.IsTrue(string.Compare(results[i - 1].MiddleName, results[i].MiddleName, StringComparison.OrdinalIgnoreCase) <= 0);
+                if (string.Equals(results[i - 1].MiddleName, results[i].MiddleName, StringComparison.OrdinalIgnoreCase))
                 {
                     Assert.IsTrue(string.Compare(results[i - 1].FirstName, results[i].FirstName, StringComparison.OrdinalIgnoreCase) <= 0);
                 }
             }
         }
 
-        protected abstract ISortingScenario<TModel> GetScenario();
+        protected abstract ISortingScenario<TEmployeeSimple> GetScenario();
 
-        static void CreateEmployees(ISortingScenario<TModel> repository)
+        static IList<TEmployeeSimple> BuildEmployees(int count, string batchKey)
         {
-            long ticks = DateTime.Now.Ticks;
-
-            for (var i = 1; i < 6; i++)
+            var result = new List<TEmployeeSimple>();
+            for (var i = 0; i < count; i++)
             {
-                var newRecord = new TModel
+                result.Add(new TEmployeeSimple
                 {
                     FirstName = "Test " + (i % 3),
                     MiddleName = "A" + i,
-                    LastName = "Person " + ticks,
-                    EmployeeClassificationKey = i
-                };
-                var newKey = repository.Create(newRecord);
-                Assert.IsTrue(newKey >= 1000, "keys under 1000 were not generated by the database");
+                    LastName = batchKey,
+                    EmployeeClassificationKey = (i % 7) + 1
+                });
             }
+            return result;
         }
     }
 }

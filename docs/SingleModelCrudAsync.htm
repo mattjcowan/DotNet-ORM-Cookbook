@@ -36,10 +36,15 @@
 </li>
 <li class="tocentry"><a href="FAQ.htm">FAQ</a>
 </li>
-<li class="tocentry"><a href="SingleModelCrud.htm">Single Model CRUD</a>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="StandardCRUDscenarios.htm">Standard CRUD scenarios</a></span>
 </li>
-<li class="tocentry"><a href="ModelWithChildren.htm">Model with Children CRUD</a>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Fetchingdatascenarios.htm">Fetching data scenarios</a></span>
 </li>
+<li class="tocentry">
+<ul>
+<li><span class="navigationgroup"><i class="fa fa-caret-down"></i> <a href="Advancedscenarios.htm">Advanced scenarios</a></span></li>
 <li class="tocentry current"><a class="current" href="SingleModelCrudAsync.htm">Async Operations</a>
 <ul class="currentrelative">
 <li class="tocentry"><a href="#scenario-prototype">Scenario Prototype</a></li>
@@ -67,40 +72,29 @@
 
 
 </ul>
-<li class="tocentry"><a href="TryCrud.htm">TryGet/Update/Delete Operations</a>
-</li>
-<li class="tocentry"><a href="Upsert.htm">Upsert</a>
-</li>
-<li class="tocentry"><a href="PartialUpdate.htm">Partial Updates</a>
-</li>
-<li class="tocentry"><a href="Immutable.htm">Immutable CRUD</a>
-</li>
-<li class="tocentry"><a href="MultipleCrud.htm">CRUD Operations on Multiple Objects</a>
-</li>
 <li class="tocentry"><a href="LargeBatch.htm">Batch Inserts with Large Collections</a>
 </li>
 <li class="tocentry"><a href="BulkInsert.htm">Bulk Inserts</a>
 </li>
-<li class="tocentry"><a href="Joins.htm">Projecting with a Join</a>
+<li class="tocentry"><a href="ConnectionSharing.htm">Connection Sharing</a>
 </li>
-<li class="tocentry"><a href="Views.htm">Reading from Views</a>
+<li class="tocentry"><a href="PartialUpdate.htm">Partial Updates</a>
 </li>
-<li class="tocentry"><a href="ScalarValue.htm">Reading a Salar Value from a Row</a>
+<li class="tocentry"><a href="Transactions.htm">Transactions</a>
 </li>
-<li class="tocentry"><a href="RowCount.htm">Row Counts</a>
+<li class="tocentry"><a href="Upsert.htm">Upsert</a>
 </li>
-<li class="tocentry"><a href="Sorting.htm">Basic Sorting</a>
-</li>
-<li class="tocentry"><a href="Pagination.htm">Paging Results</a>
-</li>
-<li class="tocentry"><a href="PopulateDataTable.htm">Populate DataTable</a>
+
+</ul>
 </li>
 <li class="tocentry">
-<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="ForeignKeytoLookupTableCRUD.htm">Foreign Key to Lookup Table CRUD</a></span>
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Sortingscenarios.htm">Sorting scenarios</a></span>
 </li>
-<li class="tocentry"><a href="BasicStoredProc.htm">Basic Stored Procedures</a>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Storedprocedurescenarios.htm">Stored procedure scenarios</a></span>
 </li>
-<li class="tocentry"><a href="Transactions.htm">Working with Transactions</a>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Auditingandhistoryscenarios.htm">Auditing and history scenarios</a></span>
 </li>
 </ul>
 				<div class="toc-footer">
@@ -120,7 +114,7 @@
             <div class="nav-content">
                 <div role="navigation" aria-label="breadcrumbs navigation">
                     <div class="breadcrumbs">
-<ul><li><a href="index.htm">Home</a></li> / <li><a href="SingleModelCrudAsync.htm">Async Operations</a></li></ul>
+<ul><li><a href="index.htm">Home</a></li> / <li><a href="Advancedscenarios.htm">Advanced scenarios</a></li> / <li><a href="SingleModelCrudAsync.htm">Async Operations</a></li></ul>
 					
                     </div>
                     <hr />
@@ -152,7 +146,7 @@
 
 <h2 id="ado.net">ADO.NET<a class="headerlink" href="#ado.net" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <p>With ADO.NET, the only changes are to add <code>await</code>, <code>Async</code>, and <code>.ConfigureAwait(false)</code> to the appropriate places. </p>
-<pre><code class="cs">public class SingleModelCrudAsyncScenario : ScenarioBase, ISingleModelCrudAsyncScenario&lt;EmployeeClassification&gt;
+<pre><code class="cs">public class SingleModelCrudAsyncScenario : SqlServerScenarioBase, ISingleModelCrudAsyncScenario&lt;EmployeeClassification&gt;
 {
     public SingleModelCrudAsyncScenario(string connectionString) : base(connectionString)
     { }
@@ -295,12 +289,12 @@
 <p>With Tortuga Chain, the only changes are to add <code>await</code>, <code>Async</code>, and <code>.ConfigureAwait(false)</code> to the appropriate places. </p>
 <pre><code class="cs">public class SingleModelCrudAsyncScenario : ISingleModelCrudAsyncScenario&lt;EmployeeClassification&gt;
 {
-    const string TableName = &quot;HR.EmployeeClassification&quot;;
     readonly SqlServerDataSource m_DataSource;
 
     public SingleModelCrudAsyncScenario(SqlServerDataSource dataSource)
     {
-        m_DataSource = dataSource ?? throw new ArgumentNullException(nameof(dataSource), $&quot;{nameof(dataSource)} is null.&quot;);
+        m_DataSource = dataSource ??
+            throw new ArgumentNullException(nameof(dataSource), $&quot;{nameof(dataSource)} is null.&quot;);
     }
 
     public Task&lt;int&gt; CreateAsync(EmployeeClassification classification)
@@ -321,22 +315,27 @@
 
     public Task DeleteByKeyAsync(int employeeClassificationKey)
     {
-        return m_DataSource.DeleteByKey(TableName, employeeClassificationKey).ExecuteAsync();
+        return m_DataSource.DeleteByKey&lt;EmployeeClassification&gt;(employeeClassificationKey).ExecuteAsync();
     }
 
-    public Task&lt;EmployeeClassification?&gt; FindByNameAsync(string employeeClassificationName, CancellationToken cancellationToken = default)
+    public Task&lt;EmployeeClassification?&gt; FindByNameAsync(string employeeClassificationName,
+        CancellationToken cancellationToken = default)
     {
-        return m_DataSource.From(TableName, new { employeeClassificationName }).ToObject&lt;EmployeeClassification&gt;(RowOptions.AllowEmptyResults).ExecuteAsync(cancellationToken);
+        return m_DataSource.From&lt;EmployeeClassification&gt;(new { employeeClassificationName })
+            .ToObjectOrNull().ExecuteAsync(cancellationToken);
     }
 
     public async Task&lt;IList&lt;EmployeeClassification&gt;&gt; GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await m_DataSource.From(TableName).ToCollection&lt;EmployeeClassification&gt;().ExecuteAsync(cancellationToken).ConfigureAwait(false);
+        return await m_DataSource.From&lt;EmployeeClassification&gt;().ToCollection().ExecuteAsync(cancellationToken)
+            .ConfigureAwait(false);
     }
 
-    public Task&lt;EmployeeClassification?&gt; GetByKeyAsync(int employeeClassificationKey, CancellationToken cancellationToken = default)
+    public Task&lt;EmployeeClassification?&gt; GetByKeyAsync(int employeeClassificationKey,
+        CancellationToken cancellationToken = default)
     {
-        return m_DataSource.GetByKey(TableName, employeeClassificationKey).ToObject&lt;EmployeeClassification&gt;(RowOptions.AllowEmptyResults).ExecuteAsync(cancellationToken);
+        return m_DataSource.GetByKey&lt;EmployeeClassification&gt;(employeeClassificationKey).ToObjectOrNull()
+            .ExecuteAsync(cancellationToken);
     }
 
     public Task UpdateAsync(EmployeeClassification classification)
@@ -353,7 +352,7 @@
 <p>For non-cancellable operation, the only changes are to add <code>await</code>, <code>Async</code>, and <code>.ConfigureAwait(false)</code> to the appropriate places. </p>
 <p>If cancellation is required, then you must wrap your parameters in a <code>CommandDefinition</code>. For example,</p>
 <p>Original:</p>
-<pre><code class="cs">public EmployeeClassification? GetByKey(int employeeClassificationKey)
+<pre><code class="cs">virtual public EmployeeClassification? GetByKey(int employeeClassificationKey)
 {
     var sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName
                 FROM HR.EmployeeClassification ec
@@ -365,7 +364,7 @@
 </code></pre>
 
 <p>Async with cancellation:</p>
-<pre><code class="cs">public async Task&lt;EmployeeClassification?&gt; GetByKeyAsync(int employeeClassificationKey, CancellationToken cancellationToken = default)
+<pre><code class="cs">virtual public async Task&lt;EmployeeClassification?&gt; GetByKeyAsync(int employeeClassificationKey, CancellationToken cancellationToken = default)
 {
     var sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName
                 FROM HR.EmployeeClassification ec
@@ -384,7 +383,7 @@
     {
     }
 
-    public async Task&lt;int&gt; CreateAsync(EmployeeClassification classification)
+    virtual public async Task&lt;int&gt; CreateAsync(EmployeeClassification classification)
     {
         if (classification == null)
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
@@ -397,7 +396,7 @@
             return await con.ExecuteScalarAsync&lt;int&gt;(sql, classification).ConfigureAwait(false);
     }
 
-    public async Task DeleteAsync(EmployeeClassification classification)
+    virtual public async Task DeleteAsync(EmployeeClassification classification)
     {
         if (classification == null)
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
@@ -427,7 +426,7 @@
                 new CommandDefinition(sql, parameters: new { employeeClassificationName }, cancellationToken: cancellationToken)).ConfigureAwait(false);
     }
 
-    public async Task&lt;IList&lt;EmployeeClassification&gt;&gt; GetAllAsync(CancellationToken cancellationToken = default)
+    virtual public async Task&lt;IList&lt;EmployeeClassification&gt;&gt; GetAllAsync(CancellationToken cancellationToken = default)
     {
         var sql = @&quot;SELECT  ec.EmployeeClassificationKey, ec.EmployeeClassificationName FROM HR.EmployeeClassification ec;&quot;;
 
@@ -435,7 +434,7 @@
             return (await con.QueryAsync&lt;EmployeeClassification&gt;(new CommandDefinition(sql, cancellationToken: cancellationToken)).ConfigureAwait(false)).ToList();
     }
 
-    public async Task&lt;EmployeeClassification?&gt; GetByKeyAsync(int employeeClassificationKey, CancellationToken cancellationToken = default)
+    virtual public async Task&lt;EmployeeClassification?&gt; GetByKeyAsync(int employeeClassificationKey, CancellationToken cancellationToken = default)
     {
         var sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName
                     FROM HR.EmployeeClassification ec
@@ -446,7 +445,7 @@
                 new CommandDefinition(sql, parameters: new { employeeClassificationKey }, cancellationToken: cancellationToken)).ConfigureAwait(false);
     }
 
-    public async Task UpdateAsync(EmployeeClassification classification)
+    virtual public async Task UpdateAsync(EmployeeClassification classification)
     {
         if (classification == null)
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
@@ -457,6 +456,58 @@
 
         using (var con = await OpenConnectionAsync().ConfigureAwait(false))
             await con.ExecuteAsync(sql, classification).ConfigureAwait(false);
+    }
+}
+</code></pre>
+
+<div class="alert alert-info"><span class="alert-title"><i class="fa fa-info-circle"></i> Info</span><p>The repository methods are not normally virtual. This was done so that they could be overridden with alternate implementations as shown below.</p>
+</div><h3 id="dapper.contrib">Dapper.Contrib<a class="headerlink" href="#dapper.contrib" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h3>
+<p>The Dapper.Contrib library can elimiante the boilerplate for some common scenarios. However, it doesn't support a <code>CancellationToken</code> so it may not be appropriate for all use cases.</p>
+<pre><code class="cs">public class SingleModelCrudAsyncScenarioContrib : SingleModelCrudAsyncScenario
+{
+    public SingleModelCrudAsyncScenarioContrib(string connectionString) : base(connectionString)
+    {
+    }
+
+    override public async Task&lt;int&gt; CreateAsync(EmployeeClassification classification)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+        using (var con = await OpenConnectionAsync().ConfigureAwait(false))
+            return await con.InsertAsync(classification).ConfigureAwait(false);
+    }
+
+    override public async Task DeleteAsync(EmployeeClassification classification)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+        using (var con = await OpenConnectionAsync().ConfigureAwait(false))
+            await con.DeleteAsync(classification).ConfigureAwait(false);
+    }
+
+    override public async Task&lt;IList&lt;EmployeeClassification&gt;&gt; GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        //WARNING: Dapper.Contrib does not support CancellationToken
+        using (var con = await OpenConnectionAsync().ConfigureAwait(false))
+            return (await con.GetAllAsync&lt;EmployeeClassification&gt;().ConfigureAwait(false)).ToList();
+    }
+
+    override public async Task&lt;EmployeeClassification?&gt; GetByKeyAsync(int employeeClassificationKey, CancellationToken cancellationToken = default)
+    {
+        //WARNING: Dapper.Contrib does not support CancellationToken
+        using (var con = await OpenConnectionAsync().ConfigureAwait(false))
+            return await con.GetAsync&lt;EmployeeClassification&gt;(employeeClassificationKey).ConfigureAwait(false);
+    }
+
+    override public async Task UpdateAsync(EmployeeClassification classification)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+        using (var con = await OpenConnectionAsync().ConfigureAwait(false))
+            await con.UpdateAsync(classification).ConfigureAwait(false);
     }
 }
 </code></pre>
@@ -777,89 +828,96 @@
 
 <h2 id="llblgen-pro">LLBLGen Pro<a class="headerlink" href="#llblgen-pro" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <p>With LLBLGen Pro, the only changes are to add <code>await</code>, <code>Async</code>, and <code>.ConfigureAwait(false)</code> to the appropriate places. </p>
-<pre><code class="cs">public class SingleModelCrudAsyncScenario : ISingleModelCrudAsyncScenario&lt;EmployeeClassificationEntity&gt;
+<pre><code class="cs"> public class SingleModelCrudAsyncScenario : ISingleModelCrudAsyncScenario&lt;EmployeeClassificationEntity&gt;
+ {
+     public async Task&lt;int&gt; CreateAsync(EmployeeClassificationEntity classification)
+     {
+         if (classification == null)
+             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+         using (var adapter = new DataAccessAdapter())
+         {
+             await adapter.SaveEntityAsync(classification).ConfigureAwait(false);
+             return classification.EmployeeClassificationKey;
+         }
+     }
+
+     public async Task DeleteAsync(EmployeeClassificationEntity classification)
+     {
+         if (classification == null)
+             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+         using (var adapter = new DataAccessAdapter())
+         {
+             classification.IsNew = false;
+             await adapter.DeleteEntityAsync(classification).ConfigureAwait(false);
+         }
+     }
+
+     public async Task DeleteByKeyAsync(int employeeClassificationKey)
+     {
+         using (var adapter = new DataAccessAdapter())
+         {
+             await adapter.DeleteEntitiesDirectlyAsync(typeof(EmployeeClassificationEntity),
+                                                       new RelationPredicateBucket(EmployeeClassificationFields.EmployeeClassificationKey
+                                                                                                      .Equal(employeeClassificationKey)))
+                 .ConfigureAwait(false);
+         }
+     }
+
+     public async Task&lt;EmployeeClassificationEntity?&gt; FindByNameAsync(string employeeClassificationName, CancellationToken cancellationToken = default)
+     {
+         using (var adapter = new DataAccessAdapter())
 {
-    public async Task&lt;int&gt; CreateAsync(EmployeeClassificationEntity classification)
-    {
-        if (classification == null)
-            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
-
-        using (var adapter = new DataAccessAdapter())
-        {
-            await adapter.SaveEntityAsync(classification).ConfigureAwait(false);
-            return classification.EmployeeClassificationKey;
-        }
-    }
-
-    public async Task DeleteAsync(EmployeeClassificationEntity classification)
-    {
-        if (classification == null)
-            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
-
-        using (var adapter = new DataAccessAdapter())
-        {
-            classification.IsNew = false;
-            await adapter.DeleteEntityAsync(classification).ConfigureAwait(false);
-        }
-    }
-
-    public async Task DeleteByKeyAsync(int employeeClassificationKey)
-    {
-        using (var adapter = new DataAccessAdapter())
-        {
-            await adapter.DeleteEntitiesDirectlyAsync(typeof(EmployeeClassificationEntity),
-                                                      new RelationPredicateBucket(EmployeeClassificationFields.EmployeeClassificationKey.Equal(employeeClassificationKey))).ConfigureAwait(false);
-        }
-    }
-
-    public async Task&lt;EmployeeClassificationEntity?&gt; FindByNameAsync(string employeeClassificationName, CancellationToken cancellationToken = default)
-    {
-        using (var adapter = new DataAccessAdapter())
-        {
-            return await new LinqMetaData(adapter).EmployeeClassification.Where(ec =&gt; ec.EmployeeClassificationName == employeeClassificationName)
-                                           .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    public async Task&lt;IList&lt;EmployeeClassificationEntity&gt;&gt; GetAllAsync(CancellationToken cancellationToken = default)
-    {
-        using (var adapter = new DataAccessAdapter())
-        {
-            return await new LinqMetaData(adapter).EmployeeClassification.ToListAsync(cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    public async Task&lt;EmployeeClassificationEntity?&gt; GetByKeyAsync(int employeeClassificationKey, CancellationToken cancellationToken = default)
-    {
-        using (var adapter = new DataAccessAdapter())
-        {
-            return await new LinqMetaData(adapter).EmployeeClassification.FirstOrDefaultAsync(ec =&gt; ec.EmployeeClassificationKey == employeeClassificationKey, cancellationToken).ConfigureAwait(false);
-        }
-    }
-
-    public async Task UpdateAsync(EmployeeClassificationEntity classification)
-    {
-        if (classification == null)
-            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
-
-        using (var adapter = new DataAccessAdapter())
-        {
-            EmployeeClassificationEntity toPersist = classification;
-            if (classification.IsNew)
-            {
-                toPersist = new LinqMetaData(adapter).EmployeeClassification.FirstOrDefault(ec =&gt; ec.EmployeeClassificationKey == classification.EmployeeClassificationKey);
-                if (toPersist != null)
-                {
-                    toPersist.EmployeeClassificationName = classification.EmployeeClassificationName;
-                }
-            }
-            if (toPersist != null &amp;&amp; !toPersist.IsNew)
-            {
-                await adapter.SaveEntityAsync(toPersist, refetchAfterSave: false, recurse: false).ConfigureAwait(false);
-            }
-        }
-    }
+    return await new LinqMetaData(adapter).EmployeeClassification
+                                          .Where(ec =&gt; ec.EmployeeClassificationName == employeeClassificationName)
+                                          .SingleOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 }
+     }
+
+     public async Task&lt;IList&lt;EmployeeClassificationEntity&gt;&gt; GetAllAsync(CancellationToken cancellationToken = default)
+     {
+         using (var adapter = new DataAccessAdapter())
+         {
+             return await new LinqMetaData(adapter).EmployeeClassification.ToListAsync(cancellationToken).ConfigureAwait(false);
+         }
+     }
+
+     public async Task&lt;EmployeeClassificationEntity?&gt; GetByKeyAsync(int employeeClassificationKey, CancellationToken cancellationToken = default)
+     {
+         using (var adapter = new DataAccessAdapter())
+         {
+             return await new LinqMetaData(adapter).EmployeeClassification
+                                          .FirstOrDefaultAsync(ec =&gt; ec.EmployeeClassificationKey == employeeClassificationKey, cancellationToken)
+                                          .ConfigureAwait(false);
+         }
+     }
+
+     public async Task UpdateAsync(EmployeeClassificationEntity classification)
+     {
+         if (classification == null)
+             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+         using (var adapter = new DataAccessAdapter())
+         {
+             EmployeeClassificationEntity toPersist = classification;
+             if (classification.IsNew)
+             {
+                 toPersist = await new LinqMetaData(adapter).EmployeeClassification
+                                             .FirstOrDefaultAsync(ec =&gt; ec.EmployeeClassificationKey == classification.EmployeeClassificationKey)
+                                             .ConfigureAwait(false);
+                 if (toPersist != null)
+                 {
+                     toPersist.EmployeeClassificationName = classification.EmployeeClassificationName;
+                 }
+             }
+             if (toPersist != null &amp;&amp; !toPersist.IsNew)
+             {
+                 await adapter.SaveEntityAsync(toPersist, refetchAfterSave: false, recurse: false).ConfigureAwait(false);
+             }
+         }
+     }
+ }
 </code></pre>
 
 <h2 id="nhibernate">NHibernate<a class="headerlink" href="#nhibernate" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
