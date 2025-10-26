@@ -33,8 +33,7 @@ public class MultipleCrudScenario : IMultipleCrudScenario<Employee>
 
         using (var context = CreateDbContext())
         {
-            foreach (var key in employeeKeys)
-                context.Entry(new Employee() { EmployeeKey = key }).State = EntityState.Deleted;
+            context.Employees.Where(x => employeeKeys.Contains(x.EmployeeKey)).ExecuteDelete();
             context.SaveChanges();
         }
     }
