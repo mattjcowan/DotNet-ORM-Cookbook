@@ -6,6 +6,8 @@ Updated all ORMs to the latest version.
 
 Restructured the RepoDB tests to fix connection leak and better match the pattern used for the other ORMs.
 
+Add ExecuteDelete demonstration for EF Core.
+
 ## July 2022
 
 ### Shared Changes
