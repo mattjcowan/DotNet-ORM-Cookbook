@@ -59,6 +59,8 @@
 
 <li class="tocentry"><a href="#dapper">Dapper</a></li>
 
+<li class="tocentry"><a href="#dbconnector">DbConnector</a></li>
+
 <li class="tocentry"><a href="#entity-framework-6">Entity Framework 6</a></li>
 
 <li class="tocentry"><a href="#entity-framework-core">Entity Framework Core</a></li>
@@ -78,6 +80,8 @@
 </ul>
 <li class="tocentry"><a href="ConnectionSharing.htm">Connection Sharing</a>
 </li>
+<li class="tocentry"><a href="MultipleDB.htm">Multiple Databases</a>
+</li>
 <li class="tocentry"><a href="PartialUpdate.htm">Partial Updates</a>
 </li>
 <li class="tocentry"><a href="Transactions.htm">Transactions</a>
@@ -95,6 +99,12 @@
 </li>
 <li class="tocentry">
 <span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Auditingandhistoryscenarios.htm">Auditing and history scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Multi-Tenancyscenarios.htm">Multi-Tenancy scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="UnknownDatabasescenarios.htm">Unknown Database scenarios</a></span>
 </li>
 </ul>
 				<div class="toc-footer">
@@ -224,12 +234,49 @@ public void BulkInsert(DataTable employees)
 
 public void BulkInsert(DataTable employees)
 {
-    m_DataSource.InsertBulk(EmployeeTableName, employees).Execute();
+    m_DataSource.InsertBulk&lt;EmployeeSimple&gt;(employees).Execute();
 }
 </code></pre>
 
 <h2 id="dapper">Dapper<a class="headerlink" href="#dapper" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <p>Dapper does not have support for bulk inserts.</p>
+<h2 id="dbconnector">DbConnector<a class="headerlink" href="#dbconnector" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
+<p>Bulk inserts are an ADO.NET &quot;data provider specific&quot; implementation therefore DbConnector is not involved or necessary.</p>
+<pre><code class="cs">public void BulkInsert(IList&lt;EmployeeSimple&gt; employees)
+{
+    if (employees == null || employees.Count == 0)
+        throw new ArgumentException($&quot;{nameof(employees)} is null or empty.&quot;, nameof(employees));
+
+    DataTable dtEmployees = Utilities.CopyToDataTable(employees);
+
+    //This implementation is ADO.NET &quot;data provider specific&quot; therefore DbConnector is not involved
+    using (var con = OpenConnection())
+    using (var sbc = new SqlBulkCopy(con))
+    {
+        sbc.DestinationTableName = &quot;HR.Employee&quot;;
+        foreach (DataColumn? column in dtEmployees.Columns)
+            sbc.ColumnMappings.Add(column!.ColumnName, column.ColumnName);
+        sbc.WriteToServer(dtEmployees);
+    }
+}
+
+public void BulkInsert(DataTable employees)
+{
+    if (employees == null)
+        throw new ArgumentNullException(nameof(employees), $&quot;{nameof(employees)} is null.&quot;);
+
+    //This implementation is ADO.NET &quot;data provider specific&quot; therefore DbConnector is not involved
+    using (var con = OpenConnection())
+    using (var sbc = new SqlBulkCopy(con))
+    {
+        sbc.DestinationTableName = &quot;HR.Employee&quot;;
+        foreach (DataColumn? column in employees.Columns)
+            sbc.ColumnMappings.Add(column!.ColumnName, column.ColumnName);
+        sbc.WriteToServer(employees);
+    }
+}
+</code></pre>
+
 <h2 id="entity-framework-6">Entity Framework 6<a class="headerlink" href="#entity-framework-6" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <p>Entity Framework does not have support for bulk inserts.</p>
 <h2 id="entity-framework-core">Entity Framework Core<a class="headerlink" href="#entity-framework-core" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
@@ -261,7 +308,8 @@ public void BulkInsert(DataTable employees)
     if (employees == null || employees.Count == 0)
         throw new ArgumentException($&quot;{nameof(employees)} is null or empty.&quot;, nameof(employees));
 
-    this.BulkInsert&lt;EmployeeSimple&gt;(employees);
+    using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+    repository.BulkInsert(employees);
 }
 
 public void BulkInsert(DataTable employees)
@@ -269,7 +317,8 @@ public void BulkInsert(DataTable employees)
     if (employees == null)
         throw new ArgumentNullException(nameof(employees), $&quot;{nameof(employees)} is null.&quot;);
 
-    this.BulkInsert&lt;EmployeeSimple&gt;(employees, rowState: DataRowState.Added);
+    using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+    repository.BulkInsert&lt;EmployeeSimple&gt;(employees, rowState: DataRowState.Added);
 }
 </code></pre>
 

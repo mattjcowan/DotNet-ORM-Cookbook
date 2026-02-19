@@ -1,48 +1,51 @@
 ﻿using Microsoft.Data.SqlClient;
-using Recipes.RepoDb.Models;
+using Recipes.RepoDB.Models;
 using Recipes.Views;
-using RDB = RepoDb;
 using RepoDb;
 using RepoDb.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using RepoDb.Enumerations;
 
-namespace Recipes.RepoDb.Views
+namespace Recipes.RepoDB.Views;
+
+public class ViewsScenario : IViewsScenario<EmployeeDetail, EmployeeSimple>
 {
-    public class ViewsScenario : DbRepository<SqlConnection>,
-        IViewsScenario<EmployeeDetail, EmployeeSimple>
+    readonly string m_ConnectionString;
+
+    public ViewsScenario(string connectionString)
     {
-        public ViewsScenario(string connectionString)
-            : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-        { }
+        m_ConnectionString = connectionString;
+    }
 
-        public int Create(EmployeeSimple employee)
-        {
-            if (employee == null)
-                throw new ArgumentNullException(nameof(employee), $"{nameof(employee)} is null.");
+    public int Create(EmployeeSimple employee)
+    {
+        if (employee == null)
+            throw new ArgumentNullException(nameof(employee), $"{nameof(employee)} is null.");
 
-            return Insert<EmployeeSimple, int>(employee);
-        }
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Insert<EmployeeSimple, int>(employee);
+    }
 
-        public IList<EmployeeDetail> FindByEmployeeClassificationKey(int employeeClassificationKey)
-        {
-            return Query<EmployeeDetail>(e => e.EmployeeClassificationKey == employeeClassificationKey).AsList();
-        }
+    public IList<EmployeeDetail> FindByEmployeeClassificationKey(int employeeClassificationKey)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Query<EmployeeDetail>(e => e.EmployeeClassificationKey == employeeClassificationKey).AsList();
+    }
 
-        public IList<EmployeeDetail> FindByLastName(string lastName)
-        {
-            return Query<EmployeeDetail>(e => e.LastName == lastName).AsList();
-        }
+    public IList<EmployeeDetail> FindByLastName(string lastName)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Query<EmployeeDetail>(e => e.LastName == lastName).AsList();
+    }
 
-        public EmployeeDetail? GetByEmployeeKey(int employeeKey)
-        {
-            return Query<EmployeeDetail>(e => e.EmployeeKey == employeeKey).FirstOrDefault();
-        }
+    public EmployeeDetail? GetByEmployeeKey(int employeeKey)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Query<EmployeeDetail>(e => e.EmployeeKey == employeeKey).FirstOrDefault();
+    }
 
-        public IEmployeeClassification? GetClassification(int employeeClassificationKey)
-        {
-            return Query<EmployeeClassification>(employeeClassificationKey).FirstOrDefault();
-        }
+    public IEmployeeClassification? GetClassification(int employeeClassificationKey)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Query<EmployeeClassification>(employeeClassificationKey).FirstOrDefault();
     }
 }

@@ -1,15 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Recipes.RepoDb.Models;
+﻿using Recipes.RepoDB.Models;
 using Recipes.Transactions;
 
-namespace Recipes.RepoDb.Transactions
+namespace Recipes.RepoDB.Transactions;
+
+[TestClass]
+public class TransactionsTests : TransactionsTests<EmployeeClassification>
 {
-    [TestClass]
-    public class TransactionsTests : TransactionsTests<EmployeeClassification>
+    protected override ITransactionsScenario<EmployeeClassification> GetScenario()
     {
-        protected override ITransactionsScenario<EmployeeClassification> GetScenario()
-        {
-            return new TransactionsScenario(Setup.ConnectionString);
-        }
+        return new TransactionsScenario(Setup.ConnectionString);
     }
 }

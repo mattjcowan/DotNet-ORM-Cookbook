@@ -1,15 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Recipes.ModelWithChildren;
-using Recipes.RepoDb.Models;
+﻿using Recipes.ModelWithChildren;
+using Recipes.RepoDB.Models;
 
-namespace Recipes.RepoDb.ModelWithChildren
+namespace Recipes.RepoDB.ModelWithChildren;
+
+[TestClass]
+public class ModelWithChildrenTests : ModelWithChildrenTests<ProductLine, Product>
 {
-    [TestClass]
-    public class ModelWithChildrenTests : ModelWithChildrenTests<ProductLine, Product>
+    protected override IModelWithChildrenScenario<ProductLine, Product> GetScenario()
     {
-        protected override IModelWithChildrenScenario<ProductLine, Product> GetScenario()
-        {
-            return new ModelWithChildrenScenario(Setup.ConnectionString);
-        }
+        return new ModelWithChildrenScenario(Setup.ConnectionString);
     }
 }

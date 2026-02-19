@@ -57,6 +57,8 @@
 
 <li class="tocentry"><a href="#dapper">Dapper</a></li>
 
+<li class="tocentry"><a href="#dbconnector">DbConnector</a></li>
+
 <li class="tocentry"><a href="#entity-framework-6">Entity Framework 6</a></li>
 
 <li class="tocentry"><a href="#entity-framework-core">Entity Framework Core</a></li>
@@ -94,6 +96,12 @@
 </li>
 <li class="tocentry">
 <span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Auditingandhistoryscenarios.htm">Auditing and history scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Multi-Tenancyscenarios.htm">Multi-Tenancy scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="UnknownDatabasescenarios.htm">Unknown Database scenarios</a></span>
 </li>
 </ul>
 				<div class="toc-footer">
@@ -201,8 +209,8 @@
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
         const string sql = @&quot;INSERT INTO HR.EmployeeClassification (EmployeeClassificationName)
-                    OUTPUT Inserted.EmployeeClassificationKey
-                    VALUES(@EmployeeClassificationName )&quot;;
+                        OUTPUT Inserted.EmployeeClassificationKey
+                        VALUES(@EmployeeClassificationName )&quot;;
 
         using (var con = OpenConnection())
         using (var cmd = new SqlCommand(sql, con))
@@ -273,8 +281,8 @@
     public EmployeeClassification FindByNameOrException(string employeeClassificationName)
     {
         const string sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName
-                    FROM HR.EmployeeClassification ec
-                    WHERE ec.EmployeeClassificationName = @EmployeeClassificationName;&quot;;
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationName = @EmployeeClassificationName;&quot;;
 
         using (var con = OpenConnection())
         using (var cmd = new SqlCommand(sql, con))
@@ -297,8 +305,8 @@
     public EmployeeClassification? FindByNameOrNull(string employeeClassificationName)
     {
         const string sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName
-                    FROM HR.EmployeeClassification ec
-                    WHERE ec.EmployeeClassificationName = @EmployeeClassificationName;&quot;;
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationName = @EmployeeClassificationName;&quot;;
 
         using (var con = OpenConnection())
         using (var cmd = new SqlCommand(sql, con))
@@ -321,8 +329,8 @@
     public EmployeeClassification GetByKeyOrException(int employeeClassificationKey)
     {
         const string sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName
-                    FROM HR.EmployeeClassification ec
-                    WHERE ec.EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
 
         using (var con = OpenConnection())
         using (var cmd = new SqlCommand(sql, con))
@@ -345,8 +353,8 @@
     public EmployeeClassification? GetByKeyOrNull(int employeeClassificationKey)
     {
         const string sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName
-                    FROM HR.EmployeeClassification ec
-                    WHERE ec.EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
 
         using (var con = OpenConnection())
         using (var cmd = new SqlCommand(sql, con))
@@ -372,8 +380,8 @@
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
         const string sql = @&quot;UPDATE HR.EmployeeClassification
-                    SET EmployeeClassificationName = @EmployeeClassificationName
-                    WHERE EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+                        SET EmployeeClassificationName = @EmployeeClassificationName
+                        WHERE EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
 
         using (var con = OpenConnection())
         using (var cmd = new SqlCommand(sql, con))
@@ -392,8 +400,8 @@
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
         const string sql = @&quot;UPDATE HR.EmployeeClassification
-                    SET EmployeeClassificationName = @EmployeeClassificationName
-                    WHERE EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+                        SET EmployeeClassificationName = @EmployeeClassificationName
+                        WHERE EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
 
         using (var con = OpenConnection())
         using (var cmd = new SqlCommand(sql, con))
@@ -560,8 +568,8 @@
     public EmployeeClassification FindByNameOrException(string employeeClassificationName)
     {
         var sql = @&quot;SELECT  ec.EmployeeClassificationKey, ec.EmployeeClassificationName
-                    FROM HR.EmployeeClassification ec
-                    WHERE ec.EmployeeClassificationName = @EmployeeClassificationName;&quot;;
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationName = @EmployeeClassificationName;&quot;;
 
         using (var con = OpenConnection())
             return con.QuerySingle&lt;EmployeeClassification&gt;(sql, new { employeeClassificationName });
@@ -570,8 +578,8 @@
     public EmployeeClassification? FindByNameOrNull(string employeeClassificationName)
     {
         var sql = @&quot;SELECT  ec.EmployeeClassificationKey, ec.EmployeeClassificationName
-                    FROM HR.EmployeeClassification ec
-                    WHERE ec.EmployeeClassificationName = @EmployeeClassificationName;&quot;;
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationName = @EmployeeClassificationName;&quot;;
 
         using (var con = OpenConnection())
             return con.QuerySingleOrDefault&lt;EmployeeClassification&gt;(sql, new { employeeClassificationName });
@@ -580,8 +588,8 @@
     public EmployeeClassification GetByKeyOrException(int employeeClassificationKey)
     {
         var sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName
-                    FROM HR.EmployeeClassification ec
-                    WHERE ec.EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
 
         using (var con = OpenConnection())
             return con.QuerySingle&lt;EmployeeClassification&gt;(sql, new { employeeClassificationKey });
@@ -590,8 +598,8 @@
     public EmployeeClassification? GetByKeyOrNull(int employeeClassificationKey)
     {
         var sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName
-                    FROM HR.EmployeeClassification ec
-                    WHERE ec.EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
 
         using (var con = OpenConnection())
             return con.QuerySingleOrDefault&lt;EmployeeClassification&gt;(sql, new { employeeClassificationKey });
@@ -603,8 +611,8 @@
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
         var sql = @&quot;UPDATE HR.EmployeeClassification
-                    SET EmployeeClassificationName = @EmployeeClassificationName
-                    WHERE EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+                        SET EmployeeClassificationName = @EmployeeClassificationName
+                        WHERE EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
 
         using (var con = OpenConnection())
         {
@@ -620,11 +628,143 @@
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
         var sql = @&quot;UPDATE HR.EmployeeClassification
-                    SET EmployeeClassificationName = @EmployeeClassificationName
-                    WHERE EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+                        SET EmployeeClassificationName = @EmployeeClassificationName
+                        WHERE EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
 
         using (var con = OpenConnection())
             return 1 == con.Execute(sql, classification);
+    }
+}
+</code></pre>
+
+<h2 id="dbconnector">DbConnector<a class="headerlink" href="#dbconnector" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
+<p>DbConnector's <code>NonQuery</code> returns the number of affected rows, if the non-query ran successfully, from the ADO.NET <code>ExecuteNonQuery</code> command.</p>
+<pre><code class="cs">public class TryCrudScenario : ScenarioBase, ITryCrudScenario&lt;EmployeeClassification&gt;
+{
+    public TryCrudScenario(string connectionString) : base(connectionString)
+    {
+    }
+
+    public int Create(EmployeeClassification classification)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+        return DbConnector.Scalar&lt;int&gt;(
+        @&quot;INSERT INTO &quot; + EmployeeClassification.TableName
+        + @&quot;(
+                    EmployeeClassificationName,
+                    IsEmployee,
+                    IsExempt
+                )
+                OUTPUT Inserted.EmployeeClassificationKey
+                VALUES (
+                    @EmployeeClassificationName,
+                    @IsEmployee,
+                    @IsExempt
+                )&quot;
+        , classification)
+        .Execute();
+    }
+
+    public void DeleteByKeyOrException(int employeeClassificationKey)
+    {
+        var sql = @&quot;DELETE HR.EmployeeClassification WHERE EmployeeClassificationKey = @employeeClassificationKey;&quot;;
+
+        var rowCount = DbConnector.NonQuery(sql, new { employeeClassificationKey }).Execute();
+        if (rowCount != 1)
+            throw new DataException($&quot;No row was found for key {employeeClassificationKey}.&quot;);
+    }
+
+    public bool DeleteByKeyWithStatus(int employeeClassificationKey)
+    {
+        var sql = @&quot;DELETE HR.EmployeeClassification WHERE EmployeeClassificationKey = @employeeClassificationKey;&quot;;
+
+        return 1 == DbConnector.NonQuery(sql, new { employeeClassificationKey }).Execute();
+    }
+
+    public void DeleteOrException(EmployeeClassification classification)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+        var sql = @&quot;DELETE HR.EmployeeClassification WHERE EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+
+        var rowCount = DbConnector.NonQuery(sql, classification).Execute();
+        if (rowCount != 1)
+            throw new DataException($&quot;No row was found for key {classification.EmployeeClassificationKey}.&quot;);
+    }
+
+    public bool DeleteWithStatus(EmployeeClassification classification)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+        var sql = @&quot;DELETE HR.EmployeeClassification WHERE EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+
+        return 1 == DbConnector.NonQuery(sql, classification).Execute();
+    }
+
+    public EmployeeClassification FindByNameOrException(string employeeClassificationName)
+    {
+        var sql = @&quot;SELECT  ec.EmployeeClassificationKey, ec.EmployeeClassificationName
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationName = @employeeClassificationName;&quot;;
+
+        return DbConnector.ReadSingle&lt;EmployeeClassification&gt;(sql, new { employeeClassificationName }).Execute();
+    }
+
+    public EmployeeClassification? FindByNameOrNull(string employeeClassificationName)
+    {
+        var sql = @&quot;SELECT  ec.EmployeeClassificationKey, ec.EmployeeClassificationName
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationName = @employeeClassificationName;&quot;;
+
+        return DbConnector.ReadSingleOrDefault&lt;EmployeeClassification&gt;(sql, new { employeeClassificationName }).Execute();
+    }
+
+    public EmployeeClassification GetByKeyOrException(int employeeClassificationKey)
+    {
+        var sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationKey = @employeeClassificationKey;&quot;;
+
+        return DbConnector.ReadSingle&lt;EmployeeClassification&gt;(sql, new { employeeClassificationKey }).Execute();
+    }
+
+    public EmployeeClassification? GetByKeyOrNull(int employeeClassificationKey)
+    {
+        var sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationKey = @employeeClassificationKey;&quot;;
+
+        return DbConnector.ReadSingleOrDefault&lt;EmployeeClassification&gt;(sql, new { employeeClassificationKey }).Execute();
+    }
+
+    public void UpdateOrException(EmployeeClassification classification)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+        var sql = @&quot;UPDATE HR.EmployeeClassification
+                        SET EmployeeClassificationName = @EmployeeClassificationName
+                        WHERE EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+
+        var rowCount = DbConnector.NonQuery(sql, classification).Execute();
+        if (rowCount != 1)
+            throw new DataException($&quot;No row was found for key {classification.EmployeeClassificationKey}.&quot;);
+    }
+
+    public bool UpdateWithStatus(EmployeeClassification classification)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+        var sql = @&quot;UPDATE HR.EmployeeClassification
+                        SET EmployeeClassificationName = @EmployeeClassificationName
+                        WHERE EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+
+        return 1 == DbConnector.NonQuery(sql, classification).Execute();
     }
 }
 </code></pre>
@@ -816,7 +956,7 @@
 
         using (var context = CreateDbContext())
         {
-            context.EmployeeClassification.Add(classification);
+            context.EmployeeClassifications.Add(classification);
             context.SaveChanges();
             return classification.EmployeeClassificationKey;
         }
@@ -827,10 +967,10 @@
         using (var context = CreateDbContext())
         {
             //Find the row you wish to delete
-            var temp = context.EmployeeClassification.Find(employeeClassificationKey);
+            var temp = context.EmployeeClassifications.Find(employeeClassificationKey);
             if (temp != null)
             {
-                context.EmployeeClassification.Remove(temp);
+                context.EmployeeClassifications.Remove(temp);
                 context.SaveChanges();
             }
             else
@@ -843,10 +983,10 @@
         using (var context = CreateDbContext())
         {
             //Find the row you wish to delete
-            var temp = context.EmployeeClassification.Find(employeeClassificationKey);
+            var temp = context.EmployeeClassifications.Find(employeeClassificationKey);
             if (temp != null)
             {
-                context.EmployeeClassification.Remove(temp);
+                context.EmployeeClassifications.Remove(temp);
                 context.SaveChanges();
                 return true;
             }
@@ -863,10 +1003,10 @@
         using (var context = CreateDbContext())
         {
             //Find the row you wish to delete
-            var temp = context.EmployeeClassification.Find(classification.EmployeeClassificationKey);
+            var temp = context.EmployeeClassifications.Find(classification.EmployeeClassificationKey);
             if (temp != null)
             {
-                context.EmployeeClassification.Remove(temp);
+                context.EmployeeClassifications.Remove(temp);
                 context.SaveChanges();
             }
             else
@@ -882,10 +1022,10 @@
         using (var context = CreateDbContext())
         {
             //Find the row you wish to delete
-            var temp = context.EmployeeClassification.Find(classification.EmployeeClassificationKey);
+            var temp = context.EmployeeClassifications.Find(classification.EmployeeClassificationKey);
             if (temp != null)
             {
-                context.EmployeeClassification.Remove(temp);
+                context.EmployeeClassifications.Remove(temp);
                 context.SaveChanges();
                 return true;
             }
@@ -898,7 +1038,7 @@
     {
         using (var context = CreateDbContext())
         {
-            return context.EmployeeClassification.Where(ec =&gt; ec.EmployeeClassificationName == employeeClassificationName).Single();
+            return context.EmployeeClassifications.Where(ec =&gt; ec.EmployeeClassificationName == employeeClassificationName).Single();
         }
     }
 
@@ -906,7 +1046,7 @@
     {
         using (var context = CreateDbContext())
         {
-            return context.EmployeeClassification.Where(ec =&gt; ec.EmployeeClassificationName == employeeClassificationName).SingleOrDefault();
+            return context.EmployeeClassifications.Where(ec =&gt; ec.EmployeeClassificationName == employeeClassificationName).SingleOrDefault();
         }
     }
 
@@ -914,7 +1054,7 @@
     {
         using (var context = CreateDbContext())
         {
-            return context.EmployeeClassification.Find(employeeClassificationKey) ?? throw new DataException($&quot;No row was found for key {employeeClassificationKey}.&quot;);
+            return context.EmployeeClassifications.Find(employeeClassificationKey) ?? throw new DataException($&quot;No row was found for key {employeeClassificationKey}.&quot;);
         }
     }
 
@@ -922,7 +1062,7 @@
     {
         using (var context = CreateDbContext())
         {
-            return context.EmployeeClassification.Find(employeeClassificationKey);
+            return context.EmployeeClassifications.Find(employeeClassificationKey);
         }
     }
 
@@ -934,7 +1074,7 @@
         using (var context = CreateDbContext())
         {
             //Get a fresh copy of the row from the database
-            var temp = context.EmployeeClassification.Find(classification.EmployeeClassificationKey);
+            var temp = context.EmployeeClassifications.Find(classification.EmployeeClassificationKey);
             if (temp != null)
             {
                 //Copy the changed fields
@@ -954,7 +1094,7 @@
         using (var context = CreateDbContext())
         {
             //Get a fresh copy of the row from the database
-            var temp = context.EmployeeClassification.Find(classification.EmployeeClassificationKey);
+            var temp = context.EmployeeClassifications.Find(classification.EmployeeClassificationKey);
             if (temp != null)
             {
                 //Copy the changed fields
@@ -1386,31 +1526,38 @@
 </code></pre>
 
 <h2 id="repodb">RepoDb<a class="headerlink" href="#repodb" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
-<pre><code class="cs">public class TryCrudScenario : BaseRepository&lt;EmployeeClassification, SqlConnection&gt;,
-    ITryCrudScenario&lt;EmployeeClassification&gt;
+<pre><code class="cs">public class TryCrudScenario : ITryCrudScenario&lt;EmployeeClassification&gt;
 {
+    readonly string m_ConnectionString;
+
     public TryCrudScenario(string connectionString)
-        : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-    { }
+    {
+        m_ConnectionString = connectionString;
+    }
 
     public int Create(EmployeeClassification classification)
     {
         if (classification == null)
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
-        return Insert&lt;int&gt;(classification);
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.Insert&lt;int&gt;(classification);
     }
 
     public void DeleteByKeyOrException(int employeeClassificationKey)
     {
-        var rowCount = Delete(employeeClassificationKey);
-        if (rowCount != 1)
-            throw new DataException($&quot;No row was found for key {employeeClassificationKey}.&quot;);
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        {
+            var rowCount = repository.Delete(employeeClassificationKey);
+            if (rowCount != 1)
+                throw new DataException($&quot;No row was found for key {employeeClassificationKey}.&quot;);
+        }
     }
 
     public bool DeleteByKeyWithStatus(int employeeClassificationKey)
     {
-        return 1 == Delete(employeeClassificationKey);
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            return 1 == repository.Delete(employeeClassificationKey);
     }
 
     public void DeleteOrException(EmployeeClassification classification)
@@ -1418,9 +1565,12 @@
         if (classification == null)
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
-        var rowCount = Delete(classification);
-        if (rowCount != 1)
-            throw new DataException($&quot;No row was found for key {classification.EmployeeClassificationKey}.&quot;);
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        {
+            var rowCount = repository.Delete(classification);
+            if (rowCount != 1)
+                throw new DataException($&quot;No row was found for key {classification.EmployeeClassificationKey}.&quot;);
+        }
     }
 
     public bool DeleteWithStatus(EmployeeClassification classification)
@@ -1428,47 +1578,60 @@
         if (classification == null)
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
-        return 1 == Delete(classification);
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            return 1 == repository.Delete(classification);
     }
 
     public EmployeeClassification FindByNameOrException(string employeeClassificationName)
     {
-        var entity = Query(e =&gt; e.EmployeeClassificationName == employeeClassificationName).FirstOrDefault();
-        if (null == entity)
-            throw new DataException($&quot;Message&quot;);
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        {
+            var entity = repository.Query(e =&gt; e.EmployeeClassificationName == employeeClassificationName).FirstOrDefault();
+            if (null == entity)
+                throw new DataException($&quot;Message&quot;);
 
-        return entity;
+            return entity;
+        }
     }
 
     public EmployeeClassification? FindByNameOrNull(string employeeClassificationName)
     {
-        return Query(e =&gt; e.EmployeeClassificationName == employeeClassificationName).FirstOrDefault();
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.Query(e =&gt; e.EmployeeClassificationName == employeeClassificationName).FirstOrDefault();
     }
 
     public EmployeeClassification GetByKeyOrException(int employeeClassificationKey)
     {
-        var entity = Query(employeeClassificationKey).FirstOrDefault();
-        if (null == entity)
-            throw new DataException($&quot;Message&quot;);
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        {
+            var entity = repository.Query(employeeClassificationKey).FirstOrDefault();
+            if (null == entity)
+                throw new DataException($&quot;Message&quot;);
 
-        return entity;
+            return entity;
+        }
     }
 
     public EmployeeClassification? GetByKeyOrNull(int employeeClassificationKey)
     {
-        return Query(employeeClassificationKey).FirstOrDefault();
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.Query(employeeClassificationKey).FirstOrDefault();
     }
 
     public void UpdateOrException(EmployeeClassification classification)
     {
-        var rowCount = Update(classification);
-        if (rowCount != 1)
-            throw new DataException($&quot;Message&quot;);
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        {
+            var rowCount = repository.Update(classification);
+            if (rowCount != 1)
+                throw new DataException($&quot;Message&quot;);
+        }
     }
 
     public bool UpdateWithStatus(EmployeeClassification classification)
     {
-        return 1 == Update(classification);
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            return 1 == repository.Update(classification);
     }
 }
 </code></pre>

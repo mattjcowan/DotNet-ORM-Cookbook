@@ -1,8 +1,6 @@
 ﻿using Recipes.EntityFrameworkCore.Entities;
 using Recipes.TryCrud;
-using System;
 using System.Data;
-using System.Linq;
 
 namespace Recipes.EntityFrameworkCore.TryCrud
 {
@@ -22,7 +20,7 @@ namespace Recipes.EntityFrameworkCore.TryCrud
 
             using (var context = CreateDbContext())
             {
-                context.EmployeeClassification.Add(classification);
+                context.EmployeeClassifications.Add(classification);
                 context.SaveChanges();
                 return classification.EmployeeClassificationKey;
             }
@@ -33,10 +31,10 @@ namespace Recipes.EntityFrameworkCore.TryCrud
             using (var context = CreateDbContext())
             {
                 //Find the row you wish to delete
-                var temp = context.EmployeeClassification.Find(employeeClassificationKey);
+                var temp = context.EmployeeClassifications.Find(employeeClassificationKey);
                 if (temp != null)
                 {
-                    context.EmployeeClassification.Remove(temp);
+                    context.EmployeeClassifications.Remove(temp);
                     context.SaveChanges();
                 }
                 else
@@ -49,10 +47,10 @@ namespace Recipes.EntityFrameworkCore.TryCrud
             using (var context = CreateDbContext())
             {
                 //Find the row you wish to delete
-                var temp = context.EmployeeClassification.Find(employeeClassificationKey);
+                var temp = context.EmployeeClassifications.Find(employeeClassificationKey);
                 if (temp != null)
                 {
-                    context.EmployeeClassification.Remove(temp);
+                    context.EmployeeClassifications.Remove(temp);
                     context.SaveChanges();
                     return true;
                 }
@@ -69,10 +67,10 @@ namespace Recipes.EntityFrameworkCore.TryCrud
             using (var context = CreateDbContext())
             {
                 //Find the row you wish to delete
-                var temp = context.EmployeeClassification.Find(classification.EmployeeClassificationKey);
+                var temp = context.EmployeeClassifications.Find(classification.EmployeeClassificationKey);
                 if (temp != null)
                 {
-                    context.EmployeeClassification.Remove(temp);
+                    context.EmployeeClassifications.Remove(temp);
                     context.SaveChanges();
                 }
                 else
@@ -88,10 +86,10 @@ namespace Recipes.EntityFrameworkCore.TryCrud
             using (var context = CreateDbContext())
             {
                 //Find the row you wish to delete
-                var temp = context.EmployeeClassification.Find(classification.EmployeeClassificationKey);
+                var temp = context.EmployeeClassifications.Find(classification.EmployeeClassificationKey);
                 if (temp != null)
                 {
-                    context.EmployeeClassification.Remove(temp);
+                    context.EmployeeClassifications.Remove(temp);
                     context.SaveChanges();
                     return true;
                 }
@@ -104,7 +102,7 @@ namespace Recipes.EntityFrameworkCore.TryCrud
         {
             using (var context = CreateDbContext())
             {
-                return context.EmployeeClassification.Where(ec => ec.EmployeeClassificationName == employeeClassificationName).Single();
+                return context.EmployeeClassifications.Where(ec => ec.EmployeeClassificationName == employeeClassificationName).Single();
             }
         }
 
@@ -112,7 +110,7 @@ namespace Recipes.EntityFrameworkCore.TryCrud
         {
             using (var context = CreateDbContext())
             {
-                return context.EmployeeClassification.Where(ec => ec.EmployeeClassificationName == employeeClassificationName).SingleOrDefault();
+                return context.EmployeeClassifications.Where(ec => ec.EmployeeClassificationName == employeeClassificationName).SingleOrDefault();
             }
         }
 
@@ -120,7 +118,7 @@ namespace Recipes.EntityFrameworkCore.TryCrud
         {
             using (var context = CreateDbContext())
             {
-                return context.EmployeeClassification.Find(employeeClassificationKey) ?? throw new DataException($"No row was found for key {employeeClassificationKey}.");
+                return context.EmployeeClassifications.Find(employeeClassificationKey) ?? throw new DataException($"No row was found for key {employeeClassificationKey}.");
             }
         }
 
@@ -128,7 +126,7 @@ namespace Recipes.EntityFrameworkCore.TryCrud
         {
             using (var context = CreateDbContext())
             {
-                return context.EmployeeClassification.Find(employeeClassificationKey);
+                return context.EmployeeClassifications.Find(employeeClassificationKey);
             }
         }
 
@@ -140,7 +138,7 @@ namespace Recipes.EntityFrameworkCore.TryCrud
             using (var context = CreateDbContext())
             {
                 //Get a fresh copy of the row from the database
-                var temp = context.EmployeeClassification.Find(classification.EmployeeClassificationKey);
+                var temp = context.EmployeeClassifications.Find(classification.EmployeeClassificationKey);
                 if (temp != null)
                 {
                     //Copy the changed fields
@@ -160,7 +158,7 @@ namespace Recipes.EntityFrameworkCore.TryCrud
             using (var context = CreateDbContext())
             {
                 //Get a fresh copy of the row from the database
-                var temp = context.EmployeeClassification.Find(classification.EmployeeClassificationKey);
+                var temp = context.EmployeeClassifications.Find(classification.EmployeeClassificationKey);
                 if (temp != null)
                 {
                     //Copy the changed fields

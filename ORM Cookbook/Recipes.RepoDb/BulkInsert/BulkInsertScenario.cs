@@ -1,38 +1,43 @@
 ﻿using Microsoft.Data.SqlClient;
 using Recipes.BulkInsert;
-using Recipes.RepoDb.Models;
+using Recipes.RepoDB.Models;
 using RepoDb;
-using System;
-using System.Collections.Generic;
 using System.Data;
 
-namespace Recipes.RepoDb.BulkInsert
+using RepoDb.Enumerations;
+
+namespace Recipes.RepoDB.BulkInsert;
+
+public class BulkInsertScenario : IBulkInsertScenario<EmployeeSimple>
 {
-    public class BulkInsertScenario : DbRepository<SqlConnection>,
-        IBulkInsertScenario<EmployeeSimple>
+    readonly string m_ConnectionString;
+
+    public BulkInsertScenario(string connectionString)
     {
-        public BulkInsertScenario(string connectionString) : base(connectionString)
-        { }
+        m_ConnectionString = connectionString;
+    }
 
-        public int CountByLastName(string lastName)
-        {
-            return (int)Count<EmployeeSimple>(e => e.LastName == lastName);
-        }
+    public int CountByLastName(string lastName)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+        return (int)repository.Count<EmployeeSimple>(e => e.LastName == lastName);
+    }
 
-        public void BulkInsert(IList<EmployeeSimple> employees)
-        {
-            if (employees == null || employees.Count == 0)
-                throw new ArgumentException($"{nameof(employees)} is null or empty.", nameof(employees));
+    public void BulkInsert(IList<EmployeeSimple> employees)
+    {
+        if (employees == null || employees.Count == 0)
+            throw new ArgumentException($"{nameof(employees)} is null or empty.", nameof(employees));
 
-            this.BulkInsert<EmployeeSimple>(employees);
-        }
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+        repository.BulkInsert(employees);
+    }
 
-        public void BulkInsert(DataTable employees)
-        {
-            if (employees == null)
-                throw new ArgumentNullException(nameof(employees), $"{nameof(employees)} is null.");
+    public void BulkInsert(DataTable employees)
+    {
+        if (employees == null)
+            throw new ArgumentNullException(nameof(employees), $"{nameof(employees)} is null.");
 
-            this.BulkInsert<EmployeeSimple>(employees, rowState: DataRowState.Added);
-        }
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+        repository.BulkInsert<EmployeeSimple>(employees, rowState: DataRowState.Added);
     }
 }

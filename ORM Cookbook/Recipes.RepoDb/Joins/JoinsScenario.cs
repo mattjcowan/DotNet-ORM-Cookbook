@@ -1,56 +1,59 @@
 ﻿using Microsoft.Data.SqlClient;
-using Recipes.RepoDb.Models;
 using Recipes.Joins;
-using RDB = RepoDb;
+using Recipes.RepoDB.Models;
 using RepoDb;
 using RepoDb.Extensions;
-using System;
-using System.Linq;
-using System.Collections.Generic;
+using RepoDb.Enumerations;
 
-namespace Recipes.RepoDb.Joins
+namespace Recipes.RepoDB.Joins;
+
+public class JoinsScenario : IJoinsScenario<EmployeeDetail, EmployeeSimple>
 {
-    public class JoinsScenario : DbRepository<SqlConnection>,
-        IJoinsScenario<EmployeeDetail, EmployeeSimple>
+    readonly string m_ConnectionString;
+
+    public JoinsScenario(string connectionString)
     {
-        public JoinsScenario(string connectionString)
-            : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-        { }
+        m_ConnectionString = connectionString;
+    }
 
-        public int Create(EmployeeSimple employee)
-        {
-            if (employee == null)
-                throw new ArgumentNullException(nameof(employee), $"{nameof(employee)} is null.");
+    public int Create(EmployeeSimple employee)
+    {
+        if (employee == null)
+            throw new ArgumentNullException(nameof(employee), $"{nameof(employee)} is null.");
 
-            return Insert<EmployeeSimple, int>(employee);
-        }
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.Insert<EmployeeSimple, int>(employee);
+    }
 
-        public IList<EmployeeDetail> FindByEmployeeClassificationKey(int employeeClassificationKey)
-        {
-            const string sql = "SELECT e.EmployeeKey, e.FirstName, e.MiddleName, e.LastName, e.Title, e.OfficePhone, e.CellPhone, e.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.Employee e INNER JOIN HR.EmployeeClassification ec ON e.EmployeeClassificationKey = ec.EmployeeClassificationKey WHERE e.EmployeeClassificationKey = @EmployeeClassificationKey";
+    public IList<EmployeeDetail> FindByEmployeeClassificationKey(int employeeClassificationKey)
+    {
+        const string sql = "SELECT e.EmployeeKey, e.FirstName, e.MiddleName, e.LastName, e.Title, e.OfficePhone, e.CellPhone, e.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.Employee e INNER JOIN HR.EmployeeClassification ec ON e.EmployeeClassificationKey = ec.EmployeeClassificationKey WHERE e.EmployeeClassificationKey = @EmployeeClassificationKey";
 
-            return ExecuteQuery<EmployeeDetail>(sql, new { employeeClassificationKey }).AsList();
-        }
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.ExecuteQuery<EmployeeDetail>(sql, new { employeeClassificationKey }).AsList();
+    }
 
-        public IList<EmployeeDetail> FindByLastName(string lastName)
-        {
-            const string sql = "SELECT e.EmployeeKey, e.FirstName, e.MiddleName, e.LastName, e.Title, e.OfficePhone, e.CellPhone, e.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.Employee e INNER JOIN HR.EmployeeClassification ec ON e.EmployeeClassificationKey = ec.EmployeeClassificationKey WHERE e.LastName = @LastName";
+    public IList<EmployeeDetail> FindByLastName(string lastName)
+    {
+        const string sql = "SELECT e.EmployeeKey, e.FirstName, e.MiddleName, e.LastName, e.Title, e.OfficePhone, e.CellPhone, e.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.Employee e INNER JOIN HR.EmployeeClassification ec ON e.EmployeeClassificationKey = ec.EmployeeClassificationKey WHERE e.LastName = @LastName";
 
-            return ExecuteQuery<EmployeeDetail>(sql, new { lastName }).AsList();
-        }
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.ExecuteQuery<EmployeeDetail>(sql, new { lastName }).AsList();
+    }
 
-        public EmployeeDetail? GetByEmployeeKey(int employeeKey)
-        {
-            const string sql = "SELECT e.EmployeeKey, e.FirstName, e.MiddleName, e.LastName, e.Title, e.OfficePhone, e.CellPhone, e.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.Employee e INNER JOIN HR.EmployeeClassification ec ON e.EmployeeClassificationKey = ec.EmployeeClassificationKey WHERE e.EmployeeKey = @EmployeeKey";
+    public EmployeeDetail? GetByEmployeeKey(int employeeKey)
+    {
+        const string sql = "SELECT e.EmployeeKey, e.FirstName, e.MiddleName, e.LastName, e.Title, e.OfficePhone, e.CellPhone, e.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.Employee e INNER JOIN HR.EmployeeClassification ec ON e.EmployeeClassificationKey = ec.EmployeeClassificationKey WHERE e.EmployeeKey = @EmployeeKey";
 
-            return ExecuteQuery<EmployeeDetail>(sql, new { employeeKey }).FirstOrDefault();
-        }
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.ExecuteQuery<EmployeeDetail>(sql, new { employeeKey }).FirstOrDefault();
+    }
 
-        public IEmployeeClassification? GetClassification(int employeeClassificationKey)
-        {
-            const string sql = "SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.EmployeeClassification ec WHERE EmployeeClassificationKey = @EmployeeClassificationKey";
+    public IEmployeeClassification? GetClassification(int employeeClassificationKey)
+    {
+        const string sql = "SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.EmployeeClassification ec WHERE EmployeeClassificationKey = @EmployeeClassificationKey";
 
-            return ExecuteQuery<EmployeeClassification>(sql, new { employeeClassificationKey }).FirstOrDefault();
-        }
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.ExecuteQuery<EmployeeClassification>(sql, new { employeeClassificationKey }).FirstOrDefault();
     }
 }

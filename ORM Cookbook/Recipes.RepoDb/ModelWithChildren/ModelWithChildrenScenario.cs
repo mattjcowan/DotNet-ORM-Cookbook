@@ -1,128 +1,145 @@
 ﻿using Microsoft.Data.SqlClient;
 using Recipes.ModelWithChildren;
-using Recipes.RepoDb.Models;
-using RDB = RepoDb;
+using Recipes.RepoDB.Models;
 using RepoDb;
 using RepoDb.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using RepoDb.Enumerations;
 
-namespace Recipes.RepoDb.ModelWithChildren
+namespace Recipes.RepoDB.ModelWithChildren;
+
+public class ModelWithChildrenScenario : IModelWithChildrenScenario<ProductLine, Product>
 {
-    public class ModelWithChildrenScenario : DbRepository<SqlConnection>,
-        IModelWithChildrenScenario<ProductLine, Product>
+    readonly string m_ConnectionString;
+
+    public ModelWithChildrenScenario(string connectionString)
     {
-        public ModelWithChildrenScenario(string connectionString)
-            : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-        { }
+        m_ConnectionString = connectionString;
+    }
 
-        public int Create(ProductLine productLine)
+    public int Create(ProductLine productLine)
+    {
+        if (productLine == null)
+            throw new ArgumentNullException(nameof(productLine), $"{nameof(productLine)} is null.");
+
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
         {
-            if (productLine == null)
-                throw new ArgumentNullException(nameof(productLine), $"{nameof(productLine)} is null.");
-
-            var key = Insert<ProductLine, int>(productLine);
+            var key = repository.Insert<ProductLine, int>(productLine);
             productLine.ApplyKeys();
-            InsertAll(productLine.Products);
+            repository.InsertAll(productLine.Products);
             return key;
         }
+    }
 
-        private void ExecuteDelete(int productLineKey)
-        {
-            var sql = @"DELETE FROM Production.Product WHERE ProductLineKey = @ProductLineKey;
+    private void ExecuteDelete(int productLineKey)
+    {
+        var sql = @"DELETE FROM Production.Product WHERE ProductLineKey = @ProductLineKey;
                 DELETE FROM Production.ProductLine WHERE ProductLineKey = @ProductLineKey;";
 
-            using (var con = CreateConnection(true))
-            {
-                con.ExecuteNonQuery(sql, new { productLineKey });
-            }
-        }
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            repository.ExecuteNonQuery(sql, new { productLineKey });
+    }
 
-        public void Delete(ProductLine productLine)
-        {
-            if (productLine == null)
-                throw new ArgumentNullException(nameof(productLine), $"{nameof(productLine)} is null.");
+    public void Delete(ProductLine productLine)
+    {
+        if (productLine == null)
+            throw new ArgumentNullException(nameof(productLine), $"{nameof(productLine)} is null.");
 
-            //base.Delete(productLine);
-            ExecuteDelete(productLine.ProductLineKey);
-        }
+        ExecuteDelete(productLine.ProductLineKey);
+    }
 
-        public void DeleteByKey(int productLineKey)
-        {
-            //base.Delete<ProductLine>(productLineKey);
-            ExecuteDelete(productLineKey);
-        }
+    public void DeleteByKey(int productLineKey)
+    {
+        ExecuteDelete(productLineKey);
+    }
 
-        private void FetchProducts(IEnumerable<ProductLine> productLines)
+    private void FetchProducts(IEnumerable<ProductLine> productLines)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
         {
             var keys = productLines.Select(e => e.ProductLineKey).AsList();
-            Query<Product>(e => keys.Contains(e.ProductLineKey))
+            repository.Query<Product>(e => keys.Contains(e.ProductLineKey))
                 .AsList()
                 .ForEach(p =>
                     productLines.First(e => e.ProductLineKey == p.ProductLineKey).Products.Add(p));
         }
+    }
 
-        public IList<ProductLine> FindByName(string productLineName, bool includeProducts)
+    public IList<ProductLine> FindByName(string productLineName, bool includeProducts)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
         {
-            var lines = Query<ProductLine>(e => e.ProductLineName == productLineName);
+            var lines = repository.Query<ProductLine>(e => e.ProductLineName == productLineName);
             if (includeProducts)
                 FetchProducts(lines);
             return lines.AsList();
         }
+    }
 
-        public IList<ProductLine> GetAll(bool includeProducts)
+    public IList<ProductLine> GetAll(bool includeProducts)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
         {
-            var lines = QueryAll<ProductLine>();
+            var lines = repository.QueryAll<ProductLine>();
             if (includeProducts)
                 FetchProducts(lines);
             return lines.AsList();
         }
+    }
 
-        public ProductLine? GetByKey(int productLineKey, bool includeProducts)
+    public ProductLine? GetByKey(int productLineKey, bool includeProducts)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
         {
-            var line = Query<ProductLine>(productLineKey).FirstOrDefault();
+            var line = repository.Query<ProductLine>(productLineKey).FirstOrDefault();
             if (includeProducts && null != line)
                 line.Products.AddRange(
-                    Query<Product>(e => e.ProductLineKey == line.ProductLineKey));
+                    repository.Query<Product>(e => e.ProductLineKey == line.ProductLineKey));
             return line;
         }
+    }
 
-        public void Update(ProductLine productLine)
+    public void Update(ProductLine productLine)
+    {
+        if (productLine == null)
+            throw new ArgumentNullException(nameof(productLine), $"{nameof(productLine)} is null.");
+
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            repository.Update(productLine);
+    }
+
+    public void Update(Product product)
+    {
+        if (product == null)
+            throw new ArgumentNullException(nameof(product), $"{nameof(product)} is null.");
+
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            repository.Update(product);
+    }
+
+    public void UpdateGraph(ProductLine productLine)
+    {
+        if (productLine == null)
+            throw new ArgumentNullException(nameof(productLine), $"{nameof(productLine)} is null.");
+
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
         {
-            if (productLine == null)
-                throw new ArgumentNullException(nameof(productLine), $"{nameof(productLine)} is null.");
-
-            base.Update(productLine);
-        }
-
-        public void Update(Product product)
-        {
-            if (product == null)
-                throw new ArgumentNullException(nameof(product), $"{nameof(product)} is null.");
-
-            base.Update(product);
-        }
-
-        public void UpdateGraph(ProductLine productLine)
-        {
-            if (productLine == null)
-                throw new ArgumentNullException(nameof(productLine), $"{nameof(productLine)} is null.");
-
             productLine.ApplyKeys();
 
-            Update(productLine);
-            MergeAll(productLine.Products);
+            repository.Update(productLine);
+            repository.MergeAll(productLine.Products);
         }
+    }
 
-        public void UpdateGraphWithChildDeletes(ProductLine productLine)
+    public void UpdateGraphWithChildDeletes(ProductLine productLine)
+    {
+        if (productLine == null)
+            throw new ArgumentNullException(nameof(productLine), $"{nameof(productLine)} is null.");
+
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
         {
-            if (productLine == null)
-                throw new ArgumentNullException(nameof(productLine), $"{nameof(productLine)} is null.");
-
             productLine.ApplyKeys();
 
-            var products = Query<Product>(p => p.ProductLineKey == productLine.ProductLineKey);
+            var products = repository.Query<Product>(p => p.ProductLineKey == productLine.ProductLineKey);
             var originalProductKeys = products
                 .Select(p => p.ProductKey);
             var currentProductKeys = productLine
@@ -134,21 +151,24 @@ namespace Recipes.RepoDb.ModelWithChildren
 
             UpdateGraphWithDeletes(productLine, productKeysToRemove);
         }
+    }
 
-        public void UpdateGraphWithDeletes(ProductLine productLine, IList<int> productKeysToRemove)
+    public void UpdateGraphWithDeletes(ProductLine productLine, IList<int> productKeysToRemove)
+    {
+        if (productLine == null)
+            throw new ArgumentNullException(nameof(productLine), $"{nameof(productLine)} is null.");
+
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
         {
-            if (productLine == null)
-                throw new ArgumentNullException(nameof(productLine), $"{nameof(productLine)} is null.");
-
             productLine.ApplyKeys();
 
-            Update(productLine);
+            repository.Update(productLine);
 
             if (productKeysToRemove?.Any() == true)
-                Delete<Product>(e => productKeysToRemove.Contains(e.ProductKey));
+                repository.Delete<Product>(e => productKeysToRemove.Contains(e.ProductKey));
 
             if (productLine.Products?.Any() == true)
-                MergeAll<Product>(productLine.Products);
+                repository.MergeAll(productLine.Products);
         }
     }
 }

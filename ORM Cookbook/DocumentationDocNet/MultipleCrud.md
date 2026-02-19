@@ -24,6 +24,10 @@ If the ORM supports it, the operation should be performed with a single SQL stat
 The repository methods are not normally virtual. This was done so that they could be overridden with better implementations as shown below.
 @end
 
+## DbConnector
+
+@snippet cs [..\Recipes.DbConnector\MultipleCrud\MultipleCrudScenario.cs] MultipleCrudScenario
+
 ### Dapper.Contrib
 
 The Dapper.Contrib library can elimiante the boilerplate for some common scenarios. 
@@ -37,6 +41,10 @@ The Dapper.Contrib library can elimiante the boilerplate for some common scenari
 ## Entity Framework Core
 
 @snippet cs [..\Recipes.EntityFrameworkCore\MultipleCrud\MultipleCrudScenario.cs] MultipleCrudScenario
+
+It should be noted that performance of the batch update and delete operations is pretty low, Entity Framework Core will Update or Delete every record one by one. 
+
+There is a third-party library can implement high-performance batch operations, which is named Zack.EFCore.Batch. It can be obtained from https://github.com/yangzhongke/Zack.EFCore.Batch.
 
 ## LINQ to DB
 

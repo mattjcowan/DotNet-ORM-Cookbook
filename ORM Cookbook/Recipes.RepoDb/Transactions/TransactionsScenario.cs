@@ -1,60 +1,64 @@
-﻿using Recipes.RepoDb.Models;
+﻿using Recipes.RepoDB.Models;
 using Recipes.Transactions;
-using RDB = RepoDb;
 using RepoDb;
-using System;
+using RepoDb.Enumerations;
 using System.Data;
-using System.Linq;
-using Microsoft.Data.SqlClient;
 
-namespace Recipes.RepoDb.Transactions
+namespace Recipes.RepoDB.Transactions;
+
+public class TransactionsScenario : ITransactionsScenario<EmployeeClassification>
 {
-    public class TransactionsScenario : BaseRepository<EmployeeClassification, SqlConnection>,
-        ITransactionsScenario<EmployeeClassification>
+    readonly string m_ConnectionString;
+
+    public TransactionsScenario(string connectionString)
     {
-        public TransactionsScenario(string connectionString)
-            : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-        { }
+        m_ConnectionString = connectionString;
+    }
 
-        public int Create(EmployeeClassification classification, bool shouldRollBack)
+    public int Create(EmployeeClassification classification, bool shouldRollBack)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
+
+        var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance);
+
+        using (var transaction = repository.CreateConnection().EnsureOpen().BeginTransaction())
         {
-            if (classification == null)
-                throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
+            var result = repository.Insert<int>(classification, transaction: transaction);
 
-            using (var transaction = CreateConnection().EnsureOpen().BeginTransaction())
-            {
-                var result = Insert<int>(classification, transaction: transaction);
+            if (shouldRollBack)
+                transaction.Rollback();
+            else
+                transaction.Commit();
 
-                if (shouldRollBack)
-                    transaction.Rollback();
-                else
-                    transaction.Commit();
-
-                return result;
-            }
+            return result;
         }
+    }
 
-        public int CreateWithIsolationLevel(EmployeeClassification classification, bool shouldRollBack, IsolationLevel isolationLevel)
+    public int CreateWithIsolationLevel(EmployeeClassification classification, bool shouldRollBack, IsolationLevel isolationLevel)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
+
+        var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance);
+
+        using (var transaction = repository.CreateConnection().EnsureOpen().BeginTransaction(isolationLevel))
         {
-            if (classification == null)
-                throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
+            var result = repository.Insert<int>(classification, transaction: transaction);
 
-            using (var transaction = CreateConnection().EnsureOpen().BeginTransaction(isolationLevel))
-            {
-                var result = Insert<int>(classification, transaction: transaction);
+            if (shouldRollBack)
+                transaction.Rollback();
+            else
+                transaction.Commit();
 
-                if (shouldRollBack)
-                    transaction.Rollback();
-                else
-                    transaction.Commit();
-
-                return result;
-            }
+            return result;
         }
+    }
 
-        public EmployeeClassification? GetByKey(int employeeClassificationKey)
-        {
-            return Query(e => e.EmployeeClassificationKey == employeeClassificationKey).FirstOrDefault();
-        }
+    public EmployeeClassification? GetByKey(int employeeClassificationKey)
+    {
+        var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance);
+
+        return repository.Query(e => e.EmployeeClassificationKey == employeeClassificationKey).FirstOrDefault();
     }
 }

@@ -1,15 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Recipes.RepoDb.Models;
+﻿using Recipes.RepoDB.Models;
 using Recipes.SingleModelCrudAsync;
 
-namespace Recipes.RepoDb.SingleModelCrudAsync
+namespace Recipes.RepoDB.SingleModelCrudAsync;
+
+[TestClass]
+public class SingleModelCrudAsyncTests : SingleModelCrudAsyncTests<EmployeeClassification>
 {
-    [TestClass]
-    public class SingleModelCrudAsyncTests : SingleModelCrudAsyncTests<EmployeeClassification>
+    protected override ISingleModelCrudAsyncScenario<EmployeeClassification> GetScenario()
     {
-        protected override ISingleModelCrudAsyncScenario<EmployeeClassification> GetScenario()
-        {
-            return new SingleModelCrudAsyncScenario(Setup.ConnectionString);
-        }
+        return new SingleModelCrudAsyncScenario(Setup.ConnectionString);
     }
 }

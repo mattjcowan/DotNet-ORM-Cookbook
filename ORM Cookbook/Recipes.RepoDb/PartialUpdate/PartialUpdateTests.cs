@@ -1,15 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Recipes.PartialUpdate;
-using Recipes.RepoDb.Models;
+﻿using Recipes.PartialUpdate;
+using Recipes.RepoDB.Models;
 
-namespace Recipes.RepoDb.PartialUpdate
+namespace Recipes.RepoDB.PartialUpdate;
+
+[TestClass]
+public class PartialUpdateTests : PartialUpdateTests<EmployeeClassification>
 {
-    [TestClass]
-    public class PartialUpdateTests : PartialUpdateTests<EmployeeClassification>
+    protected override IPartialUpdateScenario<EmployeeClassification> GetScenario()
     {
-        protected override IPartialUpdateScenario<EmployeeClassification> GetScenario()
-        {
-            return new PartialUpdateScenario(Setup.ConnectionString);
-        }
+        return new PartialUpdateScenario(Setup.ConnectionString);
     }
 }

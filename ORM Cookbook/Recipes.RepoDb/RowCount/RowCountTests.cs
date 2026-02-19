@@ -1,10 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Recipes.RepoDb;
-using Recipes.RepoDb.Models;
-using Recipes.RepoDb.RowCount;
+﻿using Recipes.RepoDB.Models;
 using Recipes.RowCount;
 
-namespace Recipes.RepoDb.RowCount
+namespace Recipes.RepoDB.RowCount
 {
     [TestClass]
     public class RowCountTests : RowCountTests<EmployeeSimple>

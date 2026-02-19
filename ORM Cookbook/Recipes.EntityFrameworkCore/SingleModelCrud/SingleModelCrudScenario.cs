@@ -1,8 +1,5 @@
 ﻿using Recipes.EntityFrameworkCore.Entities;
 using Recipes.SingleModelCrud;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Recipes.EntityFrameworkCore.SingleModelCrud
 {
@@ -22,7 +19,7 @@ namespace Recipes.EntityFrameworkCore.SingleModelCrud
 
             using (var context = CreateDbContext())
             {
-                context.EmployeeClassification.Add(classification);
+                context.EmployeeClassifications.Add(classification);
                 context.SaveChanges();
                 return classification.EmployeeClassificationKey;
             }
@@ -36,10 +33,10 @@ namespace Recipes.EntityFrameworkCore.SingleModelCrud
             using (var context = CreateDbContext())
             {
                 //Find the row you wish to delete
-                var temp = context.EmployeeClassification.Find(classification.EmployeeClassificationKey);
+                var temp = context.EmployeeClassifications.Find(classification.EmployeeClassificationKey);
                 if (temp != null)
                 {
-                    context.EmployeeClassification.Remove(temp);
+                    context.EmployeeClassifications.Remove(temp);
                     context.SaveChanges();
                 }
             }
@@ -50,20 +47,20 @@ namespace Recipes.EntityFrameworkCore.SingleModelCrud
             using (var context = CreateDbContext())
             {
                 //Find the row you wish to delete
-                var temp = context.EmployeeClassification.Find(employeeClassificationKey);
+                var temp = context.EmployeeClassifications.Find(employeeClassificationKey);
                 if (temp != null)
                 {
-                    context.EmployeeClassification.Remove(temp);
+                    context.EmployeeClassifications.Remove(temp);
                     context.SaveChanges();
                 }
             }
         }
 
-        public EmployeeClassification FindByName(string employeeClassificationName)
+        public EmployeeClassification? FindByName(string employeeClassificationName)
         {
             using (var context = CreateDbContext())
             {
-                return context.EmployeeClassification.Where(ec => ec.EmployeeClassificationName == employeeClassificationName).SingleOrDefault();
+                return context.EmployeeClassifications.Where(ec => ec.EmployeeClassificationName == employeeClassificationName).SingleOrDefault();
             }
         }
 
@@ -71,15 +68,15 @@ namespace Recipes.EntityFrameworkCore.SingleModelCrud
         {
             using (var context = CreateDbContext())
             {
-                return context.EmployeeClassification.ToList();
+                return context.EmployeeClassifications.ToList();
             }
         }
 
-        public EmployeeClassification GetByKey(int employeeClassificationKey)
+        public EmployeeClassification? GetByKey(int employeeClassificationKey)
         {
             using (var context = CreateDbContext())
             {
-                return context.EmployeeClassification.Find(employeeClassificationKey);
+                return context.EmployeeClassifications.Find(employeeClassificationKey);
             }
         }
 
@@ -91,7 +88,7 @@ namespace Recipes.EntityFrameworkCore.SingleModelCrud
             using (var context = CreateDbContext())
             {
                 //Get a fresh copy of the row from the database
-                var temp = context.EmployeeClassification.Find(classification.EmployeeClassificationKey);
+                var temp = context.EmployeeClassifications.Find(classification.EmployeeClassificationKey);
                 if (temp != null)
                 {
                     //Copy the changed fields

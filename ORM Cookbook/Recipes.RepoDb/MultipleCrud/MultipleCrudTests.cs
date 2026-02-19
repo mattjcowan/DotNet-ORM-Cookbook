@@ -1,15 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Recipes.RepoDb.Models;
-using Recipes.MultipleCrud;
+﻿using Recipes.MultipleCrud;
+using Recipes.RepoDB.Models;
 
-namespace Recipes.RepoDb.MultipleCrud
+namespace Recipes.RepoDB.MultipleCrud;
+
+[TestClass]
+public class MultipleCrudTests : MultipleCrudTests<EmployeeSimple>
 {
-    [TestClass]
-    public class MultipleCrudTests : MultipleCrudTests<EmployeeSimple>
+    protected override IMultipleCrudScenario<EmployeeSimple> GetScenario()
     {
-        protected override IMultipleCrudScenario<EmployeeSimple> GetScenario()
-        {
-            return new MultipleCrudScenario(Setup.ConnectionString);
-        }
+        return new MultipleCrudScenario(Setup.ConnectionString);
     }
 }

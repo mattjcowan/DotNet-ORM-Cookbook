@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
+[assembly: DoNotParallelize]
+
 namespace Recipes.LinqToDB
 {
     public class ConnectionStringSettings : IConnectionStringSettings
@@ -73,7 +75,9 @@ namespace Recipes.LinqToDB
             //Make sure we can connect to the database. This will also pool a connection for future use.
             using (var db = new OrmCookbook())
             {
+#pragma warning disable CA1806 // Do not ignore method results
                 db.EmployeeClassification.ToList();
+#pragma warning restore CA1806 // Do not ignore method results
             }
         }
     }

@@ -1,64 +1,67 @@
-﻿using Microsoft.Data.SqlClient;
-using Recipes.RepoDb.Models;
+﻿using Recipes.RepoDB.Models;
 using Recipes.SingleModelCrud;
-using RDB = RepoDb;
-using RepoDb;
+using RepoDb.Enumerations;
 using RepoDb.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
-namespace Recipes.RepoDb.SingleModelCrud
+namespace Recipes.RepoDB.SingleModelCrud;
+
+public class SingleModelCrudScenario : ISingleModelCrudScenario<EmployeeClassification>
 {
-    public class SingleModelCrudScenario : BaseRepository<EmployeeClassification, SqlConnection>,
-        ISingleModelCrudScenario<EmployeeClassification>
+    readonly string m_ConnectionString;
+
+    public SingleModelCrudScenario(string connectionString)
     {
-        public SingleModelCrudScenario(string connectionString)
-            : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-        { }
+        m_ConnectionString = connectionString;
+    }
 
-        public int Create(EmployeeClassification classification)
-        {
-            if (classification == null)
-                throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
+    public int Create(EmployeeClassification classification)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
 
-            return Insert<int>(classification);
-        }
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Insert<int>(classification);
+    }
 
-        public void Delete(EmployeeClassification classification)
-        {
-            if (classification == null)
-                throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
+    public void Delete(EmployeeClassification classification)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
 
-            base.Delete(classification);
-        }
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        repository.Delete(classification);
+    }
 
-        public void DeleteByKey(int employeeClassificationKey)
-        {
-            Delete(employeeClassificationKey);
-        }
+    public void DeleteByKey(int employeeClassificationKey)
+    {
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        repository.Delete(employeeClassificationKey);
+    }
 
-        public EmployeeClassification? FindByName(string employeeClassificationName)
-        {
-            return Query(e => e.EmployeeClassificationName == employeeClassificationName).FirstOrDefault();
-        }
+    public EmployeeClassification? FindByName(string employeeClassificationName)
+    {
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Query(e => e.EmployeeClassificationName == employeeClassificationName).FirstOrDefault();
+    }
 
-        public IList<EmployeeClassification> GetAll()
-        {
-            return QueryAll().AsList();
-        }
+    public IList<EmployeeClassification> GetAll()
+    {
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.QueryAll().AsList();
+    }
 
-        public EmployeeClassification? GetByKey(int employeeClassificationKey)
-        {
-            return Query(employeeClassificationKey).FirstOrDefault();
-        }
+    public EmployeeClassification? GetByKey(int employeeClassificationKey)
+    {
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Query(employeeClassificationKey).FirstOrDefault();
+    }
 
-        public void Update(EmployeeClassification classification)
-        {
-            if (classification == null)
-                throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
+    public void Update(EmployeeClassification classification)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
 
-            base.Update(classification);
-        }
+        using (var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        repository.Update(classification);
     }
 }

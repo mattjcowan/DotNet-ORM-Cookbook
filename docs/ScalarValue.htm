@@ -62,6 +62,8 @@
 
 <li class="tocentry"><a href="#dapper">Dapper</a></li>
 
+<li class="tocentry"><a href="#dbconnector">DbConnector</a></li>
+
 <li class="tocentry"><a href="#entity-framework-6">Entity Framework 6</a></li>
 
 <li class="tocentry"><a href="#entity-framework-core">Entity Framework Core</a></li>
@@ -95,6 +97,12 @@
 </li>
 <li class="tocentry">
 <span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Auditingandhistoryscenarios.htm">Auditing and history scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Multi-Tenancyscenarios.htm">Multi-Tenancy scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="UnknownDatabasescenarios.htm">Unknown Database scenarios</a></span>
 </li>
 </ul>
 				<div class="toc-footer">
@@ -130,7 +138,7 @@
 {
     int? GetDivisionKey(string divisionName);
 
-    string GetDivisionName(int divisionKey);
+    string? GetDivisionName(int divisionKey);
 
     string? GetDivisionNameOrNull(int divisionKey);
 
@@ -335,7 +343,7 @@
             return con.ExecuteScalar&lt;int?&gt;(sql, new { divisionName });
     }
 
-    public string GetDivisionName(int divisionKey)
+    public string? GetDivisionName(int divisionKey)
     {
         var sql = &quot;SELECT DivisionName FROM HR.Division WHERE DivisionKey = @DivisionKey;&quot;;
         using (var con = OpenConnection())
@@ -382,6 +390,70 @@
         var sql = &quot;SELECT StartTime FROM HR.Division WHERE DivisionKey = @DivisionKey;&quot;;
         using (var con = OpenConnection())
             return con.ExecuteScalar&lt;TimeSpan?&gt;(sql, new { divisionKey });
+    }
+}
+</code></pre>
+
+<h2 id="dbconnector">DbConnector<a class="headerlink" href="#dbconnector" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
+<pre><code class="cs">public class ScalarValueScenario : ScenarioBase, IScalarValueScenario
+{
+    public ScalarValueScenario(string connectionString) : base(connectionString)
+    { }
+
+    public int? GetDivisionKey(string divisionName)
+    {
+        var sql = &quot;SELECT DivisionKey FROM HR.Division WHERE DivisionName = @divisionName;&quot;;
+
+        return DbConnector.Scalar&lt;int?&gt;(sql, new { divisionName }).Execute();
+    }
+
+    public string GetDivisionName(int divisionKey)
+    {
+        var sql = &quot;SELECT DivisionName FROM HR.Division WHERE DivisionKey = @divisionKey;&quot;;
+
+        return DbConnector.Scalar&lt;string&gt;(sql, new { divisionKey }).Execute();
+    }
+
+    public string? GetDivisionNameOrNull(int divisionKey)
+    {
+        var sql = &quot;SELECT DivisionName FROM HR.Division WHERE DivisionKey = @divisionKey;&quot;;
+
+        return DbConnector.Scalar&lt;string?&gt;(sql, new { divisionKey }).Execute();
+    }
+
+    public DateTimeOffset? GetLastReviewCycle(int divisionKey)
+    {
+        var sql = &quot;SELECT LastReviewCycle FROM HR.Division WHERE DivisionKey = @divisionKey;&quot;;
+
+        return DbConnector.Scalar&lt;DateTimeOffset?&gt;(sql, new { divisionKey }).Execute();
+    }
+
+    public int? GetMaxEmployees(int divisionKey)
+    {
+        var sql = &quot;SELECT MaxEmployees FROM HR.Division WHERE DivisionKey = @divisionKey;&quot;;
+
+        return DbConnector.Scalar&lt;int?&gt;(sql, new { divisionKey }).Execute();
+    }
+
+    public DateTime GetModifiedDate(int divisionKey)
+    {
+        var sql = &quot;SELECT ModifiedDate FROM HR.Division WHERE DivisionKey = @divisionKey;&quot;;
+
+        return DbConnector.Scalar&lt;DateTime&gt;(sql, new { divisionKey }).Execute();
+    }
+
+    public decimal? GetSalaryBudget(int divisionKey)
+    {
+        var sql = &quot;SELECT SalaryBudget FROM HR.Division WHERE DivisionKey = @divisionKey;&quot;;
+
+        return DbConnector.Scalar&lt;decimal?&gt;(sql, new { divisionKey }).Execute();
+    }
+
+    public TimeSpan? GetStartTime(int divisionKey)
+    {
+        var sql = &quot;SELECT StartTime FROM HR.Division WHERE DivisionKey = @divisionKey;&quot;;
+
+        return DbConnector.Scalar&lt;TimeSpan?&gt;(sql, new { divisionKey }).Execute();
     }
 }
 </code></pre>
@@ -459,49 +531,49 @@
     public int? GetDivisionKey(string divisionName)
     {
         using (var context = CreateDbContext())
-            return context.Division.Where(d =&gt; d.DivisionName == divisionName).Select(d =&gt; (int?)d.DivisionKey).SingleOrDefault();
+            return context.Divisions.Where(d =&gt; d.DivisionName == divisionName).Select(d =&gt; (int?)d.DivisionKey).SingleOrDefault();
     }
 
     public string GetDivisionName(int divisionKey)
     {
         using (var context = CreateDbContext())
-            return context.Division.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.DivisionName!).Single();
+            return context.Divisions.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.DivisionName!).Single();
     }
 
     public string? GetDivisionNameOrNull(int divisionKey)
     {
         using (var context = CreateDbContext())
-            return context.Division.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.DivisionName!).SingleOrDefault();
+            return context.Divisions.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.DivisionName!).SingleOrDefault();
     }
 
     public DateTimeOffset? GetLastReviewCycle(int divisionKey)
     {
         using (var context = CreateDbContext())
-            return context.Division.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.LastReviewCycle).SingleOrDefault();
+            return context.Divisions.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.LastReviewCycle).SingleOrDefault();
     }
 
     public int? GetMaxEmployees(int divisionKey)
     {
         using (var context = CreateDbContext())
-            return context.Division.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.MaxEmployees).SingleOrDefault();
+            return context.Divisions.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.MaxEmployees).SingleOrDefault();
     }
 
     public DateTime GetModifiedDate(int divisionKey)
     {
         using (var context = CreateDbContext())
-            return context.Division.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.ModifiedDate).Single();
+            return context.Divisions.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.ModifiedDate).Single();
     }
 
     public decimal? GetSalaryBudget(int divisionKey)
     {
         using (var context = CreateDbContext())
-            return context.Division.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.SalaryBudget).SingleOrDefault();
+            return context.Divisions.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.SalaryBudget).SingleOrDefault();
     }
 
     public TimeSpan? GetStartTime(int divisionKey)
     {
         using (var context = CreateDbContext())
-            return context.Division.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.StartTime).SingleOrDefault();
+            return context.Divisions.Where(d =&gt; d.DivisionKey == divisionKey).Select(d =&gt; d.StartTime).SingleOrDefault();
     }
 }
 </code></pre>
@@ -577,7 +649,7 @@
     }
 
 
-    public string GetDivisionName(int divisionKey)
+    public string? GetDivisionName(int divisionKey)
     {
         using(var adapter = new DataAccessAdapter())
         {
@@ -651,67 +723,77 @@
 <h2 id="nhibernate">NHibernate<a class="headerlink" href="#nhibernate" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <p>TODO</p>
 <h2 id="repodb">RepoDb<a class="headerlink" href="#repodb" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
-<pre><code class="cs">public class ScalarValueScenario : DbRepository&lt;SqlConnection&gt;,
-    IScalarValueScenario
+<pre><code class="cs">public class ScalarValueScenario : IScalarValueScenario
 {
+    readonly string m_ConnectionString;
+
     public ScalarValueScenario(string connectionString)
-        : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-    { }
+    {
+        m_ConnectionString = connectionString;
+    }
 
     public int? GetDivisionKey(string divisionName)
     {
         var sql = &quot;SELECT DivisionKey FROM [HR].[Division] WHERE (DivisionName = @DivisionName);&quot;;
 
-        return ExecuteScalar&lt;int?&gt;(sql, new { divisionName });
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.ExecuteScalar&lt;int?&gt;(sql, new { divisionName });
     }
 
     public string GetDivisionName(int divisionKey)
     {
         var sql = &quot;SELECT DivisionName FROM [HR].[Division] WHERE (DivisionKey = @DivisionKey);&quot;;
 
-        return ExecuteScalar&lt;string&gt;(sql, new { divisionKey });
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.ExecuteScalar&lt;string&gt;(sql, new { divisionKey });
     }
 
     public string? GetDivisionNameOrNull(int divisionKey)
     {
         var sql = &quot;SELECT DivisionName FROM [HR].[Division] WHERE (DivisionKey = @DivisionKey);&quot;;
 
-        return ExecuteScalar&lt;string&gt;(sql, new { divisionKey });
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.ExecuteScalar&lt;string&gt;(sql, new { divisionKey });
     }
 
     public DateTimeOffset? GetLastReviewCycle(int divisionKey)
     {
         var sql = &quot;SELECT LastReviewCycle FROM [HR].[Division] WHERE (DivisionKey = @DivisionKey);&quot;;
 
-        return ExecuteScalar&lt;DateTimeOffset?&gt;(sql, new { divisionKey });
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.ExecuteScalar&lt;DateTimeOffset?&gt;(sql, new { divisionKey });
     }
 
     public int? GetMaxEmployees(int divisionKey)
     {
         var sql = &quot;SELECT MaxEmployees FROM [HR].[Division] WHERE (DivisionKey = @DivisionKey);&quot;;
 
-        return ExecuteScalar&lt;int?&gt;(sql, new { divisionKey });
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.ExecuteScalar&lt;int?&gt;(sql, new { divisionKey });
     }
 
     public DateTime GetModifiedDate(int divisionKey)
     {
         var sql = &quot;SELECT ModifiedDate FROM [HR].[Division] WHERE (DivisionKey = @DivisionKey);&quot;;
 
-        return ExecuteScalar&lt;DateTime&gt;(sql, new { divisionKey });
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.ExecuteScalar&lt;DateTime&gt;(sql, new { divisionKey });
     }
 
     public decimal? GetSalaryBudget(int divisionKey)
     {
         var sql = &quot;SELECT SalaryBudget FROM [HR].[Division] WHERE (DivisionKey = @DivisionKey);&quot;;
 
-        return ExecuteScalar&lt;decimal?&gt;(sql, new { divisionKey });
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.ExecuteScalar&lt;decimal?&gt;(sql, new { divisionKey });
     }
 
     public TimeSpan? GetStartTime(int divisionKey)
     {
         var sql = &quot;SELECT StartTime FROM [HR].[Division] WHERE (DivisionKey = @DivisionKey);&quot;;
 
-        return ExecuteScalar&lt;TimeSpan?&gt;(sql, new { divisionKey });
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.ExecuteScalar&lt;TimeSpan?&gt;(sql, new { divisionKey });
     }
 }
 </code></pre>
@@ -720,7 +802,7 @@
 <pre><code class="cs">public class ScalarValueScenario : IScalarValueScenario
 {
     private readonly IDbConnectionFactory _dbConnectionFactory;
-    
+
     public ScalarValueScenario(IDbConnectionFactory dbConnectionFactory)
     {
         _dbConnectionFactory = dbConnectionFactory;

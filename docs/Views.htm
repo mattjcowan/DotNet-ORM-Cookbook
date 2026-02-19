@@ -56,6 +56,8 @@
 
 <li class="tocentry"><a href="#dapper">Dapper</a></li>
 
+<li class="tocentry"><a href="#dbconnector">DbConnector</a></li>
+
 <li class="tocentry"><a href="#entity-framework-6">Entity Framework 6</a></li>
 
 <li class="tocentry"><a href="#entity-framework-core">Entity Framework Core</a></li>
@@ -97,6 +99,12 @@
 </li>
 <li class="tocentry">
 <span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Auditingandhistoryscenarios.htm">Auditing and history scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Multi-Tenancyscenarios.htm">Multi-Tenancy scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="UnknownDatabasescenarios.htm">Unknown Database scenarios</a></span>
 </li>
 </ul>
 				<div class="toc-footer">
@@ -179,113 +187,113 @@ FROM HR.Employee e
         ON e.EmployeeClassificationKey = ec.EmployeeClassificationKey;
 
 </pre><h2 id="ado.net">ADO.NET<a class="headerlink" href="#ado.net" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
-<pre><code class="cs">    public class ViewsScenario : SqlServerScenarioBase, IViewsScenario&lt;EmployeeDetail, EmployeeSimple&gt;
+<pre><code class="cs">public class ViewsScenario : SqlServerScenarioBase, IViewsScenario&lt;EmployeeDetail, EmployeeSimple&gt;
+{
+    public ViewsScenario(string connectionString) : base(connectionString)
+    { }
+
+    public int Create(EmployeeSimple employee)
     {
-        public ViewsScenario(string connectionString) : base(connectionString)
-        { }
+        if (employee == null)
+            throw new ArgumentNullException(nameof(employee), $&quot;{nameof(employee)} is null.&quot;);
 
-        public int Create(EmployeeSimple employee)
-        {
-            if (employee == null)
-                throw new ArgumentNullException(nameof(employee), $&quot;{nameof(employee)} is null.&quot;);
-
-            const string sql = @&quot;INSERT INTO HR.Employee
+        const string sql = @&quot;INSERT INTO HR.Employee
 (FirstName, MiddleName, LastName, Title, OfficePhone, CellPhone, EmployeeClassificationKey)
 OUTPUT Inserted.EmployeeKey
 VALUES
 (@FirstName, @MiddleName, @LastName, @Title, @OfficePhone, @CellPhone, @EmployeeClassificationKey);&quot;;
 
-            using (var con = OpenConnection())
-            using (var cmd = new SqlCommand(sql, con))
-            {
-                cmd.Parameters.AddWithValue(&quot;@FirstName&quot;, employee.FirstName);
-                cmd.Parameters.AddWithValue(&quot;@MiddleName&quot;, (object?)employee.MiddleName ?? DBNull.Value);
-                cmd.Parameters.AddWithValue(&quot;@LastName&quot;, employee.LastName);
-                cmd.Parameters.AddWithValue(&quot;@Title&quot;, (object?)employee.Title ?? DBNull.Value);
-                cmd.Parameters.AddWithValue(&quot;@OfficePhone&quot;, (object?)employee.OfficePhone ?? DBNull.Value);
-                cmd.Parameters.AddWithValue(&quot;@CellPhone&quot;, (object?)employee.CellPhone ?? DBNull.Value);
-                cmd.Parameters.AddWithValue(&quot;@EmployeeClassificationKey&quot;, employee.EmployeeClassificationKey);
-
-                return (int)cmd.ExecuteScalar();
-            }
-        }
-
-        public IList&lt;EmployeeDetail&gt; FindByEmployeeClassificationKey(int employeeClassificationKey)
+        using (var con = OpenConnection())
+        using (var cmd = new SqlCommand(sql, con))
         {
-            const string sql = &quot;SELECT ed.EmployeeKey, ed.FirstName, ed.MiddleName, ed.LastName, ed.Title, ed.OfficePhone, ed.CellPhone, ed.EmployeeClassificationKey, ed.EmployeeClassificationName, ed.IsExempt, ed.IsEmployee FROM HR.EmployeeDetail ed WHERE ed.EmployeeClassificationKey = @EmployeeClassificationKey&quot;;
+            cmd.Parameters.AddWithValue(&quot;@FirstName&quot;, employee.FirstName);
+            cmd.Parameters.AddWithValue(&quot;@MiddleName&quot;, (object?)employee.MiddleName ?? DBNull.Value);
+            cmd.Parameters.AddWithValue(&quot;@LastName&quot;, employee.LastName);
+            cmd.Parameters.AddWithValue(&quot;@Title&quot;, (object?)employee.Title ?? DBNull.Value);
+            cmd.Parameters.AddWithValue(&quot;@OfficePhone&quot;, (object?)employee.OfficePhone ?? DBNull.Value);
+            cmd.Parameters.AddWithValue(&quot;@CellPhone&quot;, (object?)employee.CellPhone ?? DBNull.Value);
+            cmd.Parameters.AddWithValue(&quot;@EmployeeClassificationKey&quot;, employee.EmployeeClassificationKey);
 
-            using (var con = OpenConnection())
-            using (var cmd = new SqlCommand(sql, con))
-            {
-                cmd.Parameters.AddWithValue(&quot;@EmployeeClassificationKey&quot;, employeeClassificationKey);
-
-                var results = new List&lt;EmployeeDetail&gt;();
-
-                using (var reader = cmd.ExecuteReader())
-                    while (reader.Read())
-                        results.Add(new EmployeeDetail(reader));
-
-                return results;
-            }
+            return (int)cmd.ExecuteScalar();
         }
+    }
 
-        public IList&lt;EmployeeDetail&gt; FindByLastName(string lastName)
+    public IList&lt;EmployeeDetail&gt; FindByEmployeeClassificationKey(int employeeClassificationKey)
+    {
+        const string sql = &quot;SELECT ed.EmployeeKey, ed.FirstName, ed.MiddleName, ed.LastName, ed.Title, ed.OfficePhone, ed.CellPhone, ed.EmployeeClassificationKey, ed.EmployeeClassificationName, ed.IsExempt, ed.IsEmployee FROM HR.EmployeeDetail ed WHERE ed.EmployeeClassificationKey = @EmployeeClassificationKey&quot;;
+
+        using (var con = OpenConnection())
+        using (var cmd = new SqlCommand(sql, con))
         {
-            const string sql = &quot;SELECT ed.EmployeeKey, ed.FirstName, ed.MiddleName, ed.LastName, ed.Title, ed.OfficePhone, ed.CellPhone, ed.EmployeeClassificationKey, ed.EmployeeClassificationName, ed.IsExempt, ed.IsEmployee FROM HR.EmployeeDetail ed WHERE ed.LastName = @LastName&quot;;
+            cmd.Parameters.AddWithValue(&quot;@EmployeeClassificationKey&quot;, employeeClassificationKey);
 
-            using (var con = OpenConnection())
-            using (var cmd = new SqlCommand(sql, con))
-            {
-                cmd.Parameters.AddWithValue(&quot;@LastName&quot;, lastName);
+            var results = new List&lt;EmployeeDetail&gt;();
 
-                var results = new List&lt;EmployeeDetail&gt;();
+            using (var reader = cmd.ExecuteReader())
+                while (reader.Read())
+                    results.Add(new EmployeeDetail(reader));
 
-                using (var reader = cmd.ExecuteReader())
-                    while (reader.Read())
-                        results.Add(new EmployeeDetail(reader));
-
-                return results;
-            }
+            return results;
         }
+    }
 
-        public EmployeeDetail? GetByEmployeeKey(int employeeKey)
+    public IList&lt;EmployeeDetail&gt; FindByLastName(string lastName)
+    {
+        const string sql = &quot;SELECT ed.EmployeeKey, ed.FirstName, ed.MiddleName, ed.LastName, ed.Title, ed.OfficePhone, ed.CellPhone, ed.EmployeeClassificationKey, ed.EmployeeClassificationName, ed.IsExempt, ed.IsEmployee FROM HR.EmployeeDetail ed WHERE ed.LastName = @LastName&quot;;
+
+        using (var con = OpenConnection())
+        using (var cmd = new SqlCommand(sql, con))
         {
-            const string sql = &quot;SELECT ed.EmployeeKey, ed.FirstName, ed.MiddleName, ed.LastName, ed.Title, ed.OfficePhone, ed.CellPhone, ed.EmployeeClassificationKey, ed.EmployeeClassificationName, ed.IsExempt, ed.IsEmployee FROM HR.EmployeeDetail ed WHERE ed.EmployeeKey = @EmployeeKey&quot;;
+            cmd.Parameters.AddWithValue(&quot;@LastName&quot;, lastName);
 
-            using (var con = OpenConnection())
-            using (var cmd = new SqlCommand(sql, con))
-            {
-                cmd.Parameters.AddWithValue(&quot;@EmployeeKey&quot;, employeeKey);
+            var results = new List&lt;EmployeeDetail&gt;();
 
-                using (var reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                        return new EmployeeDetail(reader);
-                    else
-                        return null;
-                }
-            }
+            using (var reader = cmd.ExecuteReader())
+                while (reader.Read())
+                    results.Add(new EmployeeDetail(reader));
+
+            return results;
         }
+    }
 
-        public IEmployeeClassification? GetClassification(int employeeClassificationKey)
+    public EmployeeDetail? GetByEmployeeKey(int employeeKey)
+    {
+        const string sql = &quot;SELECT ed.EmployeeKey, ed.FirstName, ed.MiddleName, ed.LastName, ed.Title, ed.OfficePhone, ed.CellPhone, ed.EmployeeClassificationKey, ed.EmployeeClassificationName, ed.IsExempt, ed.IsEmployee FROM HR.EmployeeDetail ed WHERE ed.EmployeeKey = @EmployeeKey&quot;;
+
+        using (var con = OpenConnection())
+        using (var cmd = new SqlCommand(sql, con))
         {
-            const string sql = &quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.EmployeeClassification ec WHERE EmployeeClassificationKey = @EmployeeClassificationKey&quot;;
+            cmd.Parameters.AddWithValue(&quot;@EmployeeKey&quot;, employeeKey);
 
-            using (var con = OpenConnection())
-            using (var cmd = new SqlCommand(sql, con))
+            using (var reader = cmd.ExecuteReader())
             {
-                cmd.Parameters.AddWithValue(&quot;@EmployeeClassificationKey&quot;, employeeClassificationKey);
-
-                using (var reader = cmd.ExecuteReader())
-                {
-                    if (reader.Read())
-                        return new EmployeeClassification(reader);
-                    else
-                        return null;
-                }
+                if (reader.Read())
+                    return new EmployeeDetail(reader);
+                else
+                    return null;
             }
         }
     }
+
+    public IEmployeeClassification? GetClassification(int employeeClassificationKey)
+    {
+        const string sql = &quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.EmployeeClassification ec WHERE EmployeeClassificationKey = @EmployeeClassificationKey&quot;;
+
+        using (var con = OpenConnection())
+        using (var cmd = new SqlCommand(sql, con))
+        {
+            cmd.Parameters.AddWithValue(&quot;@EmployeeClassificationKey&quot;, employeeClassificationKey);
+
+            using (var reader = cmd.ExecuteReader())
+            {
+                if (reader.Read())
+                    return new EmployeeClassification(reader);
+                else
+                    return null;
+            }
+        }
+    }
+}
 </code></pre>
 
 <h2 id="chain">Chain<a class="headerlink" href="#chain" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
@@ -378,6 +386,81 @@ VALUES
 }
 </code></pre>
 
+<h2 id="dbconnector">DbConnector<a class="headerlink" href="#dbconnector" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
+<pre><code class="cs">public class ViewsScenario : ScenarioBase, IViewsScenario&lt;EmployeeDetail, EmployeeSimple&gt;
+{
+    public ViewsScenario(string connectionString) : base(connectionString)
+    {
+    }
+
+    public int Create(EmployeeSimple employee)
+    {
+        if (employee == null)
+            throw new ArgumentNullException(nameof(employee), $&quot;{nameof(employee)} is null.&quot;);
+
+        return DbConnector.Scalar&lt;int&gt;(
+            @$&quot;INSERT INTO {EmployeeSimple.TableName}
+                    (
+                        CellPhone,
+                        EmployeeClassificationKey,
+                        FirstName,
+                        LastName,
+                        MiddleName,
+                        OfficePhone,
+                        Title
+                    )
+                    OUTPUT Inserted.EmployeeKey
+                    VALUES (
+                        @{nameof(EmployeeSimple.CellPhone)},
+                        @{nameof(EmployeeSimple.EmployeeClassificationKey)},
+                        @{nameof(EmployeeSimple.FirstName)},
+                        @{nameof(EmployeeSimple.LastName)},
+                        @{nameof(EmployeeSimple.MiddleName)},
+                        @{nameof(EmployeeSimple.OfficePhone)},
+                        @{nameof(EmployeeSimple.Title)}
+                    )&quot;
+            , employee)
+            .Execute();
+    }
+
+    public IList&lt;EmployeeDetail&gt; FindByEmployeeClassificationKey(int employeeClassificationKey)
+    {
+        const string sql = @&quot;SELECT
+                    ed.EmployeeKey, ed.FirstName, ed.MiddleName, ed.LastName, ed.Title, ed.OfficePhone, ed.CellPhone, ed.EmployeeClassificationKey, ed.EmployeeClassificationName, ed.IsExempt, ed.IsEmployee
+                    FROM HR.EmployeeDetail ed WHERE ed.EmployeeClassificationKey = @employeeClassificationKey&quot;;
+
+        return DbConnector.ReadToList&lt;EmployeeDetail&gt;(sql, new { employeeClassificationKey }).Execute();
+    }
+
+    public IList&lt;EmployeeDetail&gt; FindByLastName(string lastName)
+    {
+        const string sql = @&quot;SELECT
+            ed.EmployeeKey, ed.FirstName, ed.MiddleName, ed.LastName, ed.Title, ed.OfficePhone, ed.CellPhone, ed.EmployeeClassificationKey, ed.EmployeeClassificationName, ed.IsExempt, ed.IsEmployee
+            FROM HR.EmployeeDetail ed WHERE ed.LastName = @lastName&quot;;
+
+        return DbConnector.ReadToList&lt;EmployeeDetail&gt;(sql, new { lastName }).Execute();
+    }
+
+    public EmployeeDetail? GetByEmployeeKey(int employeeKey)
+    {
+        const string sql = @&quot;SELECT
+            ed.EmployeeKey, ed.FirstName, ed.MiddleName, ed.LastName, ed.Title, ed.OfficePhone, ed.CellPhone, ed.EmployeeClassificationKey, ed.EmployeeClassificationName, ed.IsExempt, ed.IsEmployee
+            FROM HR.EmployeeDetail ed WHERE ed.EmployeeKey = @employeeKey&quot;;
+
+        return DbConnector.ReadSingleOrDefault&lt;EmployeeDetail&gt;(sql, new { employeeKey }).Execute();
+    }
+
+    public IEmployeeClassification? GetClassification(int employeeClassificationKey)
+    {
+        const string sql = @&quot;SELECT
+            ec.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee
+            FROM HR.EmployeeClassification ec WHERE EmployeeClassificationKey = @employeeClassificationKey&quot;;
+
+        return DbConnector.ReadSingleOrDefault&lt;EmployeeClassification&gt;(sql, new { employeeClassificationKey }).Execute();
+    }
+}
+</code></pre>
+
 <h2 id="entity-framework-6">Entity Framework 6<a class="headerlink" href="#entity-framework-6" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <pre><code class="cs">public class ViewsScenario : IViewsScenario&lt;EmployeeDetail, Employee&gt;
 {
@@ -449,7 +532,7 @@ VALUES
 
         using (var context = CreateDbContext())
         {
-            context.Employee.Add(employee);
+            context.Employees.Add(employee);
             context.SaveChanges();
             return employee.EmployeeKey;
         }
@@ -458,25 +541,25 @@ VALUES
     public IList&lt;EmployeeDetail&gt; FindByEmployeeClassificationKey(int employeeClassificationKey)
     {
         using (var context = CreateDbContext())
-            return context.EmployeeDetail.Where(x =&gt; x.EmployeeClassificationKey == employeeClassificationKey).ToList();
+            return context.EmployeeDetails.Where(x =&gt; x.EmployeeClassificationKey == employeeClassificationKey).ToList();
     }
 
     public IList&lt;EmployeeDetail&gt; FindByLastName(string lastName)
     {
         using (var context = CreateDbContext())
-            return context.EmployeeDetail.Where(x =&gt; x.LastName == lastName).ToList();
+            return context.EmployeeDetails.Where(x =&gt; x.LastName == lastName).ToList();
     }
 
     public EmployeeDetail? GetByEmployeeKey(int employeeKey)
     {
         using (var context = CreateDbContext())
-            return context.EmployeeDetail.Where(x =&gt; x.EmployeeKey == employeeKey).SingleOrDefault();
+            return context.EmployeeDetails.Where(x =&gt; x.EmployeeKey == employeeKey).SingleOrDefault();
     }
 
     public IEmployeeClassification? GetClassification(int employeeClassificationKey)
     {
         using (var context = CreateDbContext())
-            return context.EmployeeClassification.Find(employeeClassificationKey);
+            return context.EmployeeClassifications.Find(employeeClassificationKey);
     }
 }
 </code></pre>
@@ -669,39 +752,46 @@ POCOs however these aren't able to participate in entity relationships.</p>
 </code></pre>
 
 <h2 id="repodb">RepoDb<a class="headerlink" href="#repodb" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
-<pre><code class="cs">public class ViewsScenario : DbRepository&lt;SqlConnection&gt;,
-    IViewsScenario&lt;EmployeeDetail, EmployeeSimple&gt;
+<pre><code class="cs">public class ViewsScenario : IViewsScenario&lt;EmployeeDetail, EmployeeSimple&gt;
 {
+    readonly string m_ConnectionString;
+
     public ViewsScenario(string connectionString)
-        : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-    { }
+    {
+        m_ConnectionString = connectionString;
+    }
 
     public int Create(EmployeeSimple employee)
     {
         if (employee == null)
             throw new ArgumentNullException(nameof(employee), $&quot;{nameof(employee)} is null.&quot;);
 
-        return Insert&lt;EmployeeSimple, int&gt;(employee);
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Insert&lt;EmployeeSimple, int&gt;(employee);
     }
 
     public IList&lt;EmployeeDetail&gt; FindByEmployeeClassificationKey(int employeeClassificationKey)
     {
-        return Query&lt;EmployeeDetail&gt;(e =&gt; e.EmployeeClassificationKey == employeeClassificationKey).AsList();
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Query&lt;EmployeeDetail&gt;(e =&gt; e.EmployeeClassificationKey == employeeClassificationKey).AsList();
     }
 
     public IList&lt;EmployeeDetail&gt; FindByLastName(string lastName)
     {
-        return Query&lt;EmployeeDetail&gt;(e =&gt; e.LastName == lastName).AsList();
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Query&lt;EmployeeDetail&gt;(e =&gt; e.LastName == lastName).AsList();
     }
 
     public EmployeeDetail? GetByEmployeeKey(int employeeKey)
     {
-        return Query&lt;EmployeeDetail&gt;(e =&gt; e.EmployeeKey == employeeKey).FirstOrDefault();
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Query&lt;EmployeeDetail&gt;(e =&gt; e.EmployeeKey == employeeKey).FirstOrDefault();
     }
 
     public IEmployeeClassification? GetClassification(int employeeClassificationKey)
     {
-        return Query&lt;EmployeeClassification&gt;(employeeClassificationKey).FirstOrDefault();
+        using (var repository = new DbRepository&lt;SqlConnection&gt;(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Query&lt;EmployeeClassification&gt;(employeeClassificationKey).FirstOrDefault();
     }
 }
 </code></pre>

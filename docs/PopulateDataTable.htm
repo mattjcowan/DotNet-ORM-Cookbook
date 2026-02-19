@@ -60,6 +60,8 @@
 
 <li class="tocentry"><a href="#dapper">Dapper</a></li>
 
+<li class="tocentry"><a href="#dbconnector">DbConnector</a></li>
+
 <li class="tocentry"><a href="#entity-framework-6">Entity Framework 6</a></li>
 
 <li class="tocentry"><a href="#entity-framework-core">Entity Framework Core</a></li>
@@ -95,6 +97,12 @@
 </li>
 <li class="tocentry">
 <span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Auditingandhistoryscenarios.htm">Auditing and history scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Multi-Tenancyscenarios.htm">Multi-Tenancy scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="UnknownDatabasescenarios.htm">Unknown Database scenarios</a></span>
 </li>
 </ul>
 				<div class="toc-footer">
@@ -240,6 +248,29 @@
 }
 </code></pre>
 
+<h2 id="dbconnector">DbConnector<a class="headerlink" href="#dbconnector" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
+<pre><code class="cs">public class PopulateDataTableScenario : ScenarioBase, IPopulateDataTableScenario
+{
+    public PopulateDataTableScenario(string connectionString) : base(connectionString)
+    {
+    }
+
+    public DataTable FindByFlags(bool isExempt, bool isEmployee)
+    {
+        var sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.EmployeeClassification ec WHERE ec.IsExempt = @isExempt AND ec.IsEmployee = @isEmployee;&quot;;
+
+        return DbConnector.ReadToDataTable(sql, new { isExempt, isEmployee }).Execute();
+    }
+
+    public DataTable GetAll()
+    {
+        var sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.EmployeeClassification ec;&quot;;
+
+        return DbConnector.ReadToDataTable(sql).Execute();
+    }
+}
+</code></pre>
+
 <h2 id="entity-framework-6">Entity Framework 6<a class="headerlink" href="#entity-framework-6" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <p>EF Core does not support <code>DataTable</code>. </p>
 <pre><code class="cs">public class PopulateDataTableScenario : IPopulateDataTableScenario
@@ -380,7 +411,7 @@
 
         using (var context = CreateDbContext())
         {
-            foreach (var row in context.EmployeeClassification.Where(x =&gt; x.IsExempt == isExempt &amp;&amp; x.IsEmployee == isEmployee))
+            foreach (var row in context.EmployeeClassifications.Where(x =&gt; x.IsExempt == isExempt &amp;&amp; x.IsEmployee == isEmployee))
                 dt.Rows.Add(row.EmployeeClassificationKey, row.EmployeeClassificationName, row.IsExempt, row.IsEmployee);
         }
         return dt;
@@ -396,7 +427,7 @@
 
         using (var context = CreateDbContext())
         {
-            foreach (var row in context.EmployeeClassification)
+            foreach (var row in context.EmployeeClassifications)
                 dt.Rows.Add(row.EmployeeClassificationKey, row.EmployeeClassificationName, row.IsExempt, row.IsEmployee);
         }
         return dt;
@@ -423,7 +454,7 @@
         using (var context = CreateDbContext())
         {
             var buffer = new object[propertyList.Count];
-            foreach (var row in context.EmployeeClassification.Where(x =&gt; x.IsExempt == isExempt &amp;&amp; x.IsEmployee == isEmployee))
+            foreach (var row in context.EmployeeClassifications.Where(x =&gt; x.IsExempt == isExempt &amp;&amp; x.IsEmployee == isEmployee))
             {
                 for (var i = 0; i &lt; propertyList.Count; i++)
                     buffer[i] = propertyList[i].InvokeGet(row) ?? DBNull.Value;
@@ -443,7 +474,7 @@
         using (var context = CreateDbContext())
         {
             var buffer = new object[propertyList.Count];
-            foreach (var row in context.EmployeeClassification)
+            foreach (var row in context.EmployeeClassifications)
             {
                 for (var i = 0; i &lt; propertyList.Count; i++)
                     buffer[i] = propertyList[i].InvokeGet(row) ?? DBNull.Value;
@@ -557,7 +588,7 @@ public class DataTableResultTransformer : IResultTransformer
             {
                 var col = m_DataTable.Columns.Add(aliases[i]);
                 if (i &lt; m_DataTypeOverrides.Length &amp;&amp; m_DataTypeOverrides[i] != null)
-                    col.DataType = m_DataTypeOverrides[i];
+                    col.DataType = m_DataTypeOverrides[i]!;
                 else if (tuple[i] != null &amp;&amp; tuple[i] != DBNull.Value)
                     col.DataType = tuple[i].GetType();
             }
@@ -630,55 +661,12 @@ public class DataTableResultTransformer : IResultTransformer
 </code></pre>
 
 <h2 id="repodb">RepoDb<a class="headerlink" href="#repodb" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
-<p>In RepoDb, the <code>DataTable.Load</code> can be provided with an <code>IDataReader</code> object from <code>ExecuteReader</code> method.</p>
-<pre><code class="cs">public class PopulateDataTableScenario : IPopulateDataTableScenario
-{
-    readonly string m_ConnectionString;
-
-    public PopulateDataTableScenario(string connectionString)
-    {
-        m_ConnectionString = connectionString;
-    }
-
-    public DataTable FindByFlags(bool isExempt, bool isEmployee)
-    {
-        var sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.EmployeeClassification ec WHERE ec.IsExempt = @IsExempt AND ec.IsEmployee = @IsEmployee;&quot;;
-        var table = new DataTable();
-
-        using (var connection = new SqlConnection(m_ConnectionString))
-        {
-            using (var reader = connection.ExecuteReader(sql, new { isExempt, isEmployee }))
-            {
-                table.Load(reader);
-            }
-        }
-
-        return table;
-    }
-
-    public DataTable GetAll()
-    {
-        var sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName, ec.IsExempt, ec.IsEmployee FROM HR.EmployeeClassification ec;&quot;;
-        var table = new DataTable();
-
-        using (var connection = new SqlConnection(m_ConnectionString))
-        {
-            using (var reader = connection.ExecuteReader(sql))
-            {
-                table.Load(reader);
-            }
-        }
-
-        return table;
-    }
-}
-</code></pre>
-
+<p>RepoDb does not natively support sorting by strings.</p>
 <h2 id="servicestack">ServiceStack<a class="headerlink" href="#servicestack" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <pre><code class="cs">public class PopulateDataTableScenario : IPopulateDataTableScenario
 {
     private readonly IDbConnectionFactory _dbConnectionFactory;
-    
+
     public PopulateDataTableScenario(IDbConnectionFactory dbConnectionFactory)
     {
         _dbConnectionFactory = dbConnectionFactory;
@@ -687,9 +675,9 @@ public class DataTableResultTransformer : IResultTransformer
     public DataTable FindByFlags(bool isExempt, bool isEmployee)
     {
         var dt = new DataTable();
-        dt.Columns.AddRange( ModelDefinition&lt;EmployeeClassification&gt;.Definition.FieldDefinitions.Select(k =&gt;
+        dt.Columns.AddRange(ModelDefinition&lt;EmployeeClassification&gt;.Definition.FieldDefinitions.Select(k =&gt;
             new DataColumn(k.FieldName, k.FieldType)).ToArray());
-        
+
         using (var db = _dbConnectionFactory.OpenDbConnection())
         {
             var sql = db.From&lt;EmployeeClassification&gt;().Where(x =&gt; x.IsExempt == isExempt &amp;&amp; x.IsEmployee == isEmployee);
@@ -703,7 +691,7 @@ public class DataTableResultTransformer : IResultTransformer
     public DataTable GetAll()
     {
         var dt = new DataTable();
-        dt.Columns.AddRange( ModelDefinition&lt;EmployeeClassification&gt;.Definition.FieldDefinitions.Select(k =&gt;
+        dt.Columns.AddRange(ModelDefinition&lt;EmployeeClassification&gt;.Definition.FieldDefinitions.Select(k =&gt;
             new DataColumn(k.FieldName, k.FieldType)).ToArray());
 
         using (var db = _dbConnectionFactory.OpenDbConnection())

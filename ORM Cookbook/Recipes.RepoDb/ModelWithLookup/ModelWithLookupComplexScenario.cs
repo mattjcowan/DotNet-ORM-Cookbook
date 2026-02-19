@@ -1,78 +1,87 @@
 ﻿using Microsoft.Data.SqlClient;
 using Recipes.ModelWithLookup;
 using Recipes.RepoDb.Models;
-using RDB = RepoDb;
+using Recipes.RepoDB.Models;
 using RepoDb;
 using RepoDb.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using RepoDb.Enumerations;
 
-namespace Recipes.RepoDb.ModelWithLookup
+namespace Recipes.RepoDB.ModelWithLookup;
+
+public class ModelWithLookupComplexScenario : IModelWithLookupComplexScenario<EmployeeComplex>
 {
-    public class ModelWithLookupComplexScenario : DbRepository<SqlConnection>,
-        IModelWithLookupComplexScenario<EmployeeComplex>
+    readonly string m_ConnectionString;
+
+    public ModelWithLookupComplexScenario(string connectionString)
     {
-        public ModelWithLookupComplexScenario(string connectionString)
-            : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-        { }
+        m_ConnectionString = connectionString;
+    }
 
-        public int Create(EmployeeComplex employee)
+    public int Create(EmployeeComplex employee)
+    {
+        if (employee == null)
+            throw new ArgumentNullException(nameof(employee), $"{nameof(employee)} is null.");
+        if (employee.EmployeeClassification == null)
+            throw new ArgumentNullException(nameof(employee), $"{nameof(employee.EmployeeClassification)} is null.");
+
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.Insert<EmployeeComplex, int>(employee);
+    }
+
+    public void Delete(EmployeeComplex employee)
+    {
+        if (employee == null)
+            throw new ArgumentNullException(nameof(employee), $"{nameof(employee)} is null.");
+
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            repository.Delete(employee);
+    }
+
+    public void DeleteByKey(int employeeKey)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            repository.Delete<EmployeeComplex>(employeeKey);
+    }
+
+    public IList<EmployeeComplex> FindByLastName(string lastName)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.Query<EmployeeComplex>(e => e.LastName == lastName).AsList();
+    }
+
+    public IList<EmployeeComplex> GetAll()
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.QueryAll<EmployeeComplex>().AsList();
+    }
+
+    public EmployeeComplex? GetByKey(int employeeKey)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
         {
-            if (employee == null)
-                throw new ArgumentNullException(nameof(employee), $"{nameof(employee)} is null.");
-            if (employee.EmployeeClassification == null)
-                throw new ArgumentNullException(nameof(employee), $"{nameof(employee.EmployeeClassification)} is null.");
-
-            return Insert<EmployeeComplex, int>(employee);
-        }
-
-        public void Delete(EmployeeComplex employee)
-        {
-            if (employee == null)
-                throw new ArgumentNullException(nameof(employee), $"{nameof(employee)} is null.");
-
-            base.Delete(employee);
-        }
-
-        public void DeleteByKey(int employeeKey)
-        {
-            Delete<EmployeeComplex>(employeeKey);
-        }
-
-        public IList<EmployeeComplex> FindByLastName(string lastName)
-        {
-            return Query<EmployeeComplex>(e => e.LastName == lastName).AsList();
-        }
-
-        public IList<EmployeeComplex> GetAll()
-        {
-            return QueryAll<EmployeeComplex>().AsList();
-        }
-
-        public EmployeeComplex? GetByKey(int employeeKey)
-        {
-            var employee = Query<EmployeeComplex>(employeeKey).FirstOrDefault();
+            var employee = repository.Query<EmployeeComplex>(employeeKey).FirstOrDefault();
             if (employee != null)
             {
-                employee.EmployeeClassification = Query<EmployeeClassification>(employee.EmployeeClassificationKey).FirstOrDefault();
+                employee.EmployeeClassification = repository.Query<EmployeeClassification>(employee.EmployeeClassificationKey).FirstOrDefault();
             }
             return employee;
         }
+    }
 
-        public IEmployeeClassification? GetClassification(int employeeClassificationKey)
-        {
-            return Query<EmployeeClassification>(employeeClassificationKey).FirstOrDefault();
-        }
+    public IEmployeeClassification? GetClassification(int employeeClassificationKey)
+    {
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.Query<EmployeeClassification>(employeeClassificationKey).FirstOrDefault();
+    }
 
-        public void Update(EmployeeComplex employee)
-        {
-            if (employee == null)
-                throw new ArgumentNullException(nameof(employee), $"{nameof(employee)} is null.");
-            if (employee.EmployeeClassification == null)
-                throw new ArgumentNullException(nameof(employee), $"{nameof(employee.EmployeeClassification)} is null.");
+    public void Update(EmployeeComplex employee)
+    {
+        if (employee == null)
+            throw new ArgumentNullException(nameof(employee), $"{nameof(employee)} is null.");
+        if (employee.EmployeeClassification == null)
+            throw new ArgumentNullException(nameof(employee), $"{nameof(employee.EmployeeClassification)} is null.");
 
-            base.Update(employee);
-        }
+        using (var repository = new DbRepository<SqlConnection>(m_ConnectionString, ConnectionPersistency.Instance))
+            repository.Update(employee);
     }
 }

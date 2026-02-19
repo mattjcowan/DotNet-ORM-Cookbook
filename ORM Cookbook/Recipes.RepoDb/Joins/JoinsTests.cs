@@ -1,15 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Recipes.RepoDb.Models;
-using Recipes.Joins;
+﻿using Recipes.Joins;
+using Recipes.RepoDB.Models;
 
-namespace Recipes.RepoDb.Joins
+namespace Recipes.RepoDB.Joins;
+
+[TestClass]
+public class JoinsTests : JoinsTests<EmployeeDetail, EmployeeSimple>
 {
-    [TestClass]
-    public class JoinsTests : JoinsTests<EmployeeDetail, EmployeeSimple>
+    protected override IJoinsScenario<EmployeeDetail, EmployeeSimple> GetScenario()
     {
-        protected override IJoinsScenario<EmployeeDetail, EmployeeSimple> GetScenario()
-        {
-            return new JoinsScenario(Setup.ConnectionString);
-        }
+        return new JoinsScenario(Setup.ConnectionString);
     }
 }

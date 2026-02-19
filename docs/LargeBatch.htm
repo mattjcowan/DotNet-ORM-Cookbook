@@ -57,6 +57,8 @@
 
 <li class="tocentry"><a href="#dapper">Dapper</a></li>
 
+<li class="tocentry"><a href="#dbconnector">DbConnector</a></li>
+
 <li class="tocentry"><a href="#entity-framework-6">Entity Framework 6</a></li>
 
 <li class="tocentry"><a href="#entity-framework-core">Entity Framework Core</a></li>
@@ -78,6 +80,8 @@
 </li>
 <li class="tocentry"><a href="ConnectionSharing.htm">Connection Sharing</a>
 </li>
+<li class="tocentry"><a href="MultipleDB.htm">Multiple Databases</a>
+</li>
 <li class="tocentry"><a href="PartialUpdate.htm">Partial Updates</a>
 </li>
 <li class="tocentry"><a href="Transactions.htm">Transactions</a>
@@ -95,6 +99,12 @@
 </li>
 <li class="tocentry">
 <span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Auditingandhistoryscenarios.htm">Auditing and history scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Multi-Tenancyscenarios.htm">Multi-Tenancy scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="UnknownDatabasescenarios.htm">Unknown Database scenarios</a></span>
 </li>
 </ul>
 				<div class="toc-footer">
@@ -188,70 +198,70 @@
 
 <h2 id="ado.net">ADO.NET<a class="headerlink" href="#ado.net" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <p>Large collections need to be broken up into batches. For SQL Server, the maximum batch size is approximately <code>2100/number of columns</code>.</p>
-<pre><code class="cs">    public class LargeBatchScenario : SqlServerScenarioBase, ILargeBatchScenario&lt;EmployeeSimple&gt;
+<pre><code class="cs">public class LargeBatchScenario : SqlServerScenarioBase, ILargeBatchScenario&lt;EmployeeSimple&gt;
+{
+    public LargeBatchScenario(string connectionString) : base(connectionString)
+    { }
+
+    public int CountByLastName(string lastName)
     {
-        public LargeBatchScenario(string connectionString) : base(connectionString)
-        { }
-
-        public int CountByLastName(string lastName)
+        const string sql = &quot;SELECT Count(*) FROM HR.EmployeeDetail e WHERE e.LastName = @LastName&quot;;
+        using (var con = OpenConnection())
+        using (var cmd = new SqlCommand(sql, con))
         {
-            const string sql = &quot;SELECT Count(*) FROM HR.EmployeeDetail e WHERE e.LastName = @LastName&quot;;
-            using (var con = OpenConnection())
-            using (var cmd = new SqlCommand(sql, con))
-            {
-                cmd.Parameters.AddWithValue(&quot;@LastName&quot;, lastName);
-                return (int)cmd.ExecuteScalar();
-            }
+            cmd.Parameters.AddWithValue(&quot;@LastName&quot;, lastName);
+            return (int)cmd.ExecuteScalar();
         }
+    }
 
-        public int MaximumBatchSize =&gt; 2100 / 7;
+    public int MaximumBatchSize =&gt; 2100 / 7;
 
-        public void InsertLargeBatch(IList&lt;EmployeeSimple&gt; employees)
+    public void InsertLargeBatch(IList&lt;EmployeeSimple&gt; employees)
+    {
+        InsertLargeBatch(employees, 250);
+    }
+
+    public void InsertLargeBatch(IList&lt;EmployeeSimple&gt; employees, int batchSize)
+    {
+        if (employees == null || employees.Count == 0)
+            throw new ArgumentException($&quot;{nameof(employees)} is null or empty.&quot;, nameof(employees));
+
+        using (var con = OpenConnection())
+        using (var trans = con.BeginTransaction())
         {
-            InsertLargeBatch(employees, 250);
-        }
-
-        public void InsertLargeBatch(IList&lt;EmployeeSimple&gt; employees, int batchSize)
-        {
-            if (employees == null || employees.Count == 0)
-                throw new ArgumentException($&quot;{nameof(employees)} is null or empty.&quot;, nameof(employees));
-
-            using (var con = OpenConnection())
-            using (var trans = con.BeginTransaction())
+            foreach (var batch in employees.BatchAsLists(batchSize))
             {
-                foreach (var batch in employees.BatchAsLists(batchSize))
-                {
-                    var sql = new StringBuilder(@&quot;INSERT INTO HR.Employee
+                var sql = new StringBuilder(@&quot;INSERT INTO HR.Employee
 (FirstName, MiddleName, LastName, Title, OfficePhone, CellPhone, EmployeeClassificationKey)
 VALUES &quot;);
 
+                for (var i = 0; i &lt; batch.Count; i++)
+                {
+                    if (i != 0)
+                        sql.AppendLine(&quot;,&quot;);
+                    sql.Append($&quot;(@FirstName_{i}, @MiddleName_{i}, @LastName_{i}, @Title_{i}, @OfficePhone_{i}, @CellPhone_{i}, @EmployeeClassificationKey_{i})&quot;);
+                }
+                sql.AppendLine(&quot;;&quot;);
+
+                using (var cmd = new SqlCommand(sql.ToString(), con, trans))
+                {
                     for (var i = 0; i &lt; batch.Count; i++)
                     {
-                        if (i != 0)
-                            sql.AppendLine(&quot;,&quot;);
-                        sql.Append($&quot;(@FirstName_{i}, @MiddleName_{i}, @LastName_{i}, @Title_{i}, @OfficePhone_{i}, @CellPhone_{i}, @EmployeeClassificationKey_{i})&quot;);
+                        cmd.Parameters.AddWithValue($&quot;@FirstName_{i}&quot;, batch[i].FirstName);
+                        cmd.Parameters.AddWithValue($&quot;@MiddleName_{i}&quot;, (object?)batch[i].MiddleName ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue($&quot;@LastName_{i}&quot;, batch[i].LastName);
+                        cmd.Parameters.AddWithValue($&quot;@Title_{i}&quot;, (object?)batch[i].Title ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue($&quot;@OfficePhone_{i}&quot;, (object?)batch[i].OfficePhone ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue($&quot;@CellPhone_{i}&quot;, (object?)batch[i].CellPhone ?? DBNull.Value);
+                        cmd.Parameters.AddWithValue($&quot;@EmployeeClassificationKey_{i}&quot;, batch[i].EmployeeClassificationKey);
                     }
-                    sql.AppendLine(&quot;;&quot;);
-
-                    using (var cmd = new SqlCommand(sql.ToString(), con, trans))
-                    {
-                        for (var i = 0; i &lt; batch.Count; i++)
-                        {
-                            cmd.Parameters.AddWithValue($&quot;@FirstName_{i}&quot;, batch[i].FirstName);
-                            cmd.Parameters.AddWithValue($&quot;@MiddleName_{i}&quot;, (object?)batch[i].MiddleName ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue($&quot;@LastName_{i}&quot;, batch[i].LastName);
-                            cmd.Parameters.AddWithValue($&quot;@Title_{i}&quot;, (object?)batch[i].Title ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue($&quot;@OfficePhone_{i}&quot;, (object?)batch[i].OfficePhone ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue($&quot;@CellPhone_{i}&quot;, (object?)batch[i].CellPhone ?? DBNull.Value);
-                            cmd.Parameters.AddWithValue($&quot;@EmployeeClassificationKey_{i}&quot;, batch[i].EmployeeClassificationKey);
-                        }
-                        cmd.ExecuteNonQuery();
-                    }
+                    cmd.ExecuteNonQuery();
                 }
-                trans.Commit();
             }
+            trans.Commit();
         }
     }
+}
 </code></pre>
 
 <h2 id="chain">Chain<a class="headerlink" href="#chain" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
@@ -266,12 +276,12 @@ VALUES &quot;);
         m_DataSource = dataSource;
     }
 
+    public int MaximumBatchSize =&gt; 2100 / 7;
+
     public int CountByLastName(string lastName)
     {
-        return (int)m_DataSource.From&lt;EmployeeSimple&gt;(new { lastName }).AsCount().Execute();
+        return m_DataSource.From&lt;EmployeeSimple&gt;(new { lastName }).AsCount().Execute();
     }
-
-    public int MaximumBatchSize =&gt; 2100 / 7;
 
     public void InsertLargeBatch(IList&lt;EmployeeSimple&gt; employees)
     {
@@ -291,7 +301,7 @@ VALUES &quot;);
         {
             //This is essentially what InsertMultipleBatch does
             foreach (var batch in employees.BatchAsLists(batchSize))
-                trans.InsertBatch((IReadOnlyList&lt;EmployeeSimple&gt;)batch).Execute();
+                trans.InsertBatch(batch).Execute();
 
             trans.Commit();
         }
@@ -301,62 +311,62 @@ VALUES &quot;);
 
 <h2 id="dapper">Dapper<a class="headerlink" href="#dapper" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <p>Large collections need to be broken up into batches. For SQL Server, the maximum batch size is approximately <code>2100/number of columns</code>.</p>
-<pre><code class="cs">    public class LargeBatchScenario : ScenarioBase, ILargeBatchScenario&lt;EmployeeSimple&gt;
+<pre><code class="cs">public class LargeBatchScenario : ScenarioBase, ILargeBatchScenario&lt;EmployeeSimple&gt;
+{
+    public LargeBatchScenario(string connectionString) : base(connectionString)
+    { }
+
+    public int CountByLastName(string lastName)
     {
-        public LargeBatchScenario(string connectionString) : base(connectionString)
-        { }
+        const string sql = &quot;SELECT Count(*) FROM HR.EmployeeDetail e WHERE e.LastName = @LastName&quot;;
 
-        public int CountByLastName(string lastName)
+        using (var con = OpenConnection())
+            return con.ExecuteScalar&lt;int&gt;(sql, new { lastName });
+    }
+
+    public int MaximumBatchSize =&gt; 2100 / 7;
+
+    virtual public void InsertLargeBatch(IList&lt;EmployeeSimple&gt; employees)
+    {
+        InsertLargeBatch(employees, 250);
+    }
+
+    virtual public void InsertLargeBatch(IList&lt;EmployeeSimple&gt; employees, int batchSize)
+    {
+        if (employees == null || employees.Count == 0)
+            throw new ArgumentException($&quot;{nameof(employees)} is null or empty.&quot;, nameof(employees));
+
+        using (var con = OpenConnection())
+        using (var trans = con.BeginTransaction())
         {
-            const string sql = &quot;SELECT Count(*) FROM HR.EmployeeDetail e WHERE e.LastName = @LastName&quot;;
-
-            using (var con = OpenConnection())
-                return con.ExecuteScalar&lt;int&gt;(sql, new { lastName });
-        }
-
-        public int MaximumBatchSize =&gt; 2100 / 7;
-
-        virtual public void InsertLargeBatch(IList&lt;EmployeeSimple&gt; employees)
-        {
-            InsertLargeBatch(employees, 250);
-        }
-
-        virtual public void InsertLargeBatch(IList&lt;EmployeeSimple&gt; employees, int batchSize)
-        {
-            if (employees == null || employees.Count == 0)
-                throw new ArgumentException($&quot;{nameof(employees)} is null or empty.&quot;, nameof(employees));
-
-            using (var con = OpenConnection())
-            using (var trans = con.BeginTransaction())
+            foreach (var batch in employees.BatchAsLists(batchSize))
             {
-                foreach (var batch in employees.BatchAsLists(batchSize))
-                {
-                    var sql = new StringBuilder(@&quot;INSERT INTO HR.Employee
+                var sql = new StringBuilder(@&quot;INSERT INTO HR.Employee
 (FirstName, MiddleName, LastName, Title, OfficePhone, CellPhone, EmployeeClassificationKey)
 VALUES &quot;);
-                    var parameters = new Dictionary&lt;string, object?&gt;();
-                    for (var i = 0; i &lt; batch.Count; i++)
-                    {
-                        if (i != 0)
-                            sql.AppendLine(&quot;,&quot;);
-                        sql.Append($&quot;(@FirstName_{i}, @MiddleName_{i}, @LastName_{i}, @Title_{i}, @OfficePhone_{i}, @CellPhone_{i}, @EmployeeClassificationKey_{i})&quot;);
+                var parameters = new Dictionary&lt;string, object?&gt;();
+                for (var i = 0; i &lt; batch.Count; i++)
+                {
+                    if (i != 0)
+                        sql.AppendLine(&quot;,&quot;);
+                    sql.Append($&quot;(@FirstName_{i}, @MiddleName_{i}, @LastName_{i}, @Title_{i}, @OfficePhone_{i}, @CellPhone_{i}, @EmployeeClassificationKey_{i})&quot;);
 
-                        parameters[$&quot;@FirstName_{i}&quot;] = batch[i].FirstName;
-                        parameters[$&quot;@MiddleName_{i}&quot;] = batch[i].MiddleName;
-                        parameters[$&quot;@LastName_{i}&quot;] = batch[i].LastName;
-                        parameters[$&quot;@Title_{i}&quot;] = batch[i].Title;
-                        parameters[$&quot;@OfficePhone_{i}&quot;] = batch[i].OfficePhone;
-                        parameters[$&quot;@CellPhone_{i}&quot;] = batch[i].CellPhone;
-                        parameters[$&quot;@EmployeeClassificationKey_{i}&quot;] = batch[i].EmployeeClassificationKey;
-                    }
-                    sql.AppendLine(&quot;;&quot;);
-
-                    con.Execute(sql.ToString(), parameters, transaction: trans);
+                    parameters[$&quot;@FirstName_{i}&quot;] = batch[i].FirstName;
+                    parameters[$&quot;@MiddleName_{i}&quot;] = batch[i].MiddleName;
+                    parameters[$&quot;@LastName_{i}&quot;] = batch[i].LastName;
+                    parameters[$&quot;@Title_{i}&quot;] = batch[i].Title;
+                    parameters[$&quot;@OfficePhone_{i}&quot;] = batch[i].OfficePhone;
+                    parameters[$&quot;@CellPhone_{i}&quot;] = batch[i].CellPhone;
+                    parameters[$&quot;@EmployeeClassificationKey_{i}&quot;] = batch[i].EmployeeClassificationKey;
                 }
-                trans.Commit();
+                sql.AppendLine(&quot;;&quot;);
+
+                con.Execute(sql.ToString(), parameters, transaction: trans);
             }
+            trans.Commit();
         }
     }
+}
 </code></pre>
 
 <div class="alert alert-info"><span class="alert-title"><i class="fa fa-info-circle"></i> Info</span><p>The repository methods are not normally virtual. This was done so that they could be overridden with better implementations as shown below.</p>
@@ -393,6 +403,86 @@ VALUES &quot;);
 
             trans.Commit();
         }
+    }
+}
+</code></pre>
+
+<h2 id="dbconnector">DbConnector<a class="headerlink" href="#dbconnector" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
+<pre><code class="cs">public class LargeBatchScenario : ScenarioBase, ILargeBatchScenario&lt;EmployeeSimple&gt;
+{
+    public LargeBatchScenario(string connectionString) : base(connectionString)
+    { }
+
+    public int CountByLastName(string lastName)
+    {
+        const string sql = &quot;SELECT Count(*) FROM HR.EmployeeDetail e WHERE e.LastName = @lastName&quot;;
+
+        return DbConnector.Scalar&lt;int&gt;(sql, new { lastName }).Execute();
+    }
+
+    public int MaximumBatchSize =&gt; int.MaxValue;
+
+    virtual public void InsertLargeBatch(IList&lt;EmployeeSimple&gt; employees)
+    {
+        InsertLargeBatch(employees, 250);
+    }
+
+    virtual public void InsertLargeBatch(IList&lt;EmployeeSimple&gt; employees, int batchSize)
+    {
+        if (employees == null || !employees.Any())
+            throw new ArgumentException($&quot;{nameof(employees)} is null or empty.&quot;, nameof(employees));
+
+        //Best approach for unlimited inserts since SQL server has parameter amount restrictions
+        //https://docs.microsoft.com/en-us/sql/sql-server/maximum-capacity-specifications-for-sql-server?redirectedfrom=MSDN&amp;view=sql-server-ver15
+        //Also, notice the &quot;batchSize&quot; argument is not necessary.
+        DbConnector.Build&lt;int?&gt;(
+                sql: @$&quot;INSERT INTO {EmployeeSimple.TableName}
+                    (
+                        CellPhone,
+                        EmployeeClassificationKey,
+                        FirstName,
+                        LastName,
+                        MiddleName,
+                        OfficePhone,
+                        Title
+                    )
+                    VALUES (
+                        @{nameof(EmployeeSimple.CellPhone)},
+                        @{nameof(EmployeeSimple.EmployeeClassificationKey)},
+                        @{nameof(EmployeeSimple.FirstName)},
+                        @{nameof(EmployeeSimple.LastName)},
+                        @{nameof(EmployeeSimple.MiddleName)},
+                        @{nameof(EmployeeSimple.OfficePhone)},
+                        @{nameof(EmployeeSimple.Title)}
+                    )&quot;,
+                param: employees.First(),
+                onExecute: (int? result, IDbExecutionModel em) =&gt;
+                {
+                    //Set the command
+                    DbCommand command = em.Command;
+
+                    //Execute first row.
+                    em.NumberOfRowsAffected = command.ExecuteNonQuery();
+
+                    //Set and execute remaining rows.
+                    foreach (var emp in employees.Skip(1))
+                    {
+                        command.Parameters[nameof(EmployeeSimple.CellPhone)].Value = emp.CellPhone ?? (object)DBNull.Value;
+                        command.Parameters[nameof(EmployeeSimple.EmployeeClassificationKey)].Value = emp.EmployeeClassificationKey;
+                        command.Parameters[nameof(EmployeeSimple.FirstName)].Value = emp.FirstName ?? (object)DBNull.Value;
+                        command.Parameters[nameof(EmployeeSimple.LastName)].Value = emp.LastName ?? (object)DBNull.Value;
+                        command.Parameters[nameof(EmployeeSimple.MiddleName)].Value = emp.MiddleName ?? (object)DBNull.Value;
+                        command.Parameters[nameof(EmployeeSimple.OfficePhone)].Value = emp.OfficePhone ?? (object)DBNull.Value;
+                        command.Parameters[nameof(EmployeeSimple.Title)].Value = emp.Title ?? (object)DBNull.Value;
+
+                        em.NumberOfRowsAffected += command.ExecuteNonQuery();
+                    }
+
+                    return em.NumberOfRowsAffected;
+                }
+            )
+            .WithIsolationLevel(IsolationLevel.ReadCommitted)//Use a transaction
+            .Execute();
     }
 }
 </code></pre>
@@ -434,8 +524,7 @@ VALUES &quot;);
         {
             using (var context = CreateDbContext())
             {
-                foreach (var employee in batch)
-                    context.Employee.Add(employee);
+                context.Employee.AddRange(batch);
                 context.SaveChanges();
             }
         }
@@ -459,7 +548,7 @@ VALUES &quot;);
     public int CountByLastName(string lastName)
     {
         using (var context = CreateDbContext())
-            return context.Employee.Where(ec =&gt; ec.LastName == lastName).Count();
+            return context.Employees.Where(ec =&gt; ec.LastName == lastName).Count();
     }
 
     public void InsertLargeBatch(IList&lt;Employee&gt; employees)
@@ -469,8 +558,7 @@ VALUES &quot;);
 
         using (var context = CreateDbContext())
         {
-            foreach (var employee in employees)
-                context.Employee.Add(employee);
+            context.Employees.AddRange(employees);
             context.SaveChanges();
         }
     }
@@ -481,8 +569,7 @@ VALUES &quot;);
         {
             using (var context = CreateDbContext())
             {
-                foreach (var employee in batch)
-                    context.Employee.Add(employee);
+                context.Employees.AddRange(batch);
                 context.SaveChanges();
             }
         }
@@ -597,15 +684,19 @@ public void BulkInsert(DataTable employees)
 
 <h2 id="repodb">RepoDb<a class="headerlink" href="#repodb" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <p>No changes are needed. </p>
-<pre><code class="cs">public class LargeBatchScenario : BaseRepository&lt;EmployeeSimple, SqlConnection&gt;, ILargeBatchScenario&lt;EmployeeSimple&gt;
+<pre><code class="cs">public class LargeBatchScenario : ILargeBatchScenario&lt;EmployeeSimple&gt;
 {
+    readonly string m_ConnectionString;
+
     public LargeBatchScenario(string connectionString)
-        : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-    { }
+    {
+        m_ConnectionString = connectionString;
+    }
 
     public int CountByLastName(string lastName)
     {
-        return Query(e =&gt; e.LastName == lastName).Count();
+        using (var repository = new EmployeeSimpleRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Query(e =&gt; e.LastName == lastName).Count();
     }
 
     public int MaximumBatchSize =&gt; 2100 / 7;
@@ -615,7 +706,8 @@ public void BulkInsert(DataTable employees)
         if (employees == null || employees.Count == 0)
             throw new ArgumentException($&quot;{nameof(employees)} is null or empty.&quot;, nameof(employees));
 
-        InsertAll(employees);
+        using (var repository = new EmployeeSimpleRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        repository.InsertAll(employees);
     }
 
     public void InsertLargeBatch(IList&lt;EmployeeSimple&gt; employees, int batchSize)
@@ -623,7 +715,8 @@ public void BulkInsert(DataTable employees)
         if (employees == null || employees.Count == 0)
             throw new ArgumentException($&quot;{nameof(employees)} is null or empty.&quot;, nameof(employees));
 
-        InsertAll(employees, batchSize: batchSize);
+        using (var repository = new EmployeeSimpleRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        repository.InsertAll(employees, batchSize: batchSize);
     }
 }
 </code></pre>

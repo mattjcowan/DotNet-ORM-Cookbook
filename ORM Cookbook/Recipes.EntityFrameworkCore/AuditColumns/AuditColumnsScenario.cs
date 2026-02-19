@@ -1,50 +1,48 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Recipes.AuditColumns;
 using Recipes.EntityFrameworkCore.Entities;
-using System;
 
-namespace Recipes.EntityFrameworkCore.AuditColumns
+namespace Recipes.EntityFrameworkCore.AuditColumns;
+
+public class AuditColumnsScenario : IAuditColumnsScenario<Department>
 {
-    public class AuditColumnsScenario : IAuditColumnsScenario<Department>
+    private Func<User, OrmCookbookContextWithUser> CreateDbContext;
+
+    public AuditColumnsScenario(Func<User, OrmCookbookContextWithUser> dBContextFactory)
     {
-        private Func<User, OrmCookbookContextWithUser> CreateDbContext;
+        CreateDbContext = dBContextFactory;
+    }
 
-        public AuditColumnsScenario(Func<User, OrmCookbookContextWithUser> dBContextFactory)
+    public int CreateDepartment(Department department, User user)
+    {
+        if (department == null)
+            throw new ArgumentNullException(nameof(department), $"{nameof(department)} is null.");
+
+        using (var context = CreateDbContext(user))
         {
-            CreateDbContext = dBContextFactory;
+            context.Departments.Add(department);
+            context.SaveChanges();
+            return department.DepartmentKey;
         }
+    }
 
-        public int CreateDepartment(Department department, User user)
+    public Department? GetDepartment(int departmentKey, User user)
+    {
+        using (var context = CreateDbContext(user))
         {
-            if (department == null)
-                throw new ArgumentNullException(nameof(department), $"{nameof(department)} is null.");
-
-            using (var context = CreateDbContext(user))
-            {
-                context.Department.Add(department);
-                context.SaveChanges();
-                return department.DepartmentKey;
-            }
+            return context.Departments.Find(departmentKey);
         }
+    }
 
-        public Department GetDepartment(int departmentKey, User user)
+    public void UpdateDepartment(Department department, User user)
+    {
+        if (department == null)
+            throw new ArgumentNullException(nameof(department), $"{nameof(department)} is null.");
+
+        using (var context = CreateDbContext(user))
         {
-            using (var context = CreateDbContext(user))
-            {
-                return context.Department.Find(departmentKey);
-            }
-        }
-
-        public void UpdateDepartment(Department department, User user)
-        {
-            if (department == null)
-                throw new ArgumentNullException(nameof(department), $"{nameof(department)} is null.");
-
-            using (var context = CreateDbContext(user))
-            {
-                context.Entry(department).State = EntityState.Modified;
-                context.SaveChanges();
-            }
+            context.Entry(department).State = EntityState.Modified;
+            context.SaveChanges();
         }
     }
 }

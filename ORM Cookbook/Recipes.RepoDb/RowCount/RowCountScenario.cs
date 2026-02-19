@@ -1,36 +1,36 @@
-﻿using Microsoft.Data.SqlClient;
-using Recipes.RepoDb.Models;
+﻿using Recipes.RepoDB.Models;
 using Recipes.RowCount;
-using RDB = RepoDb;
-using RepoDb;
-using System;
-using System.Collections.Generic;
+using RepoDb.Enumerations;
 
-namespace Recipes.RepoDb.RowCount
+namespace Recipes.RepoDB.RowCount;
+
+public class RowCountScenario : IRowCountScenario<EmployeeSimple>
 {
-    public class RowCountScenario : BaseRepository<EmployeeSimple, SqlConnection>,
-        IRowCountScenario<EmployeeSimple>
+    readonly string m_ConnectionString;
+
+    public RowCountScenario(string connectionString)
     {
-        public RowCountScenario(string connectionString)
-            : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-        { }
+        m_ConnectionString = connectionString;
+    }
 
-        public int EmployeeCount(string lastName)
-        {
-            return (int)Count(e => e.LastName == lastName);
-        }
+    public int EmployeeCount(string lastName)
+    {
+        using (var repository = new EmployeeSimpleRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        return (int)repository.Count(e => e.LastName == lastName);
+    }
 
-        public int EmployeeCount()
-        {
-            return (int)CountAll();
-        }
+    public int EmployeeCount()
+    {
+        using (var repository = new EmployeeSimpleRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        return (int)repository.CountAll();
+    }
 
-        public void InsertBatch(IList<EmployeeSimple> employees)
-        {
-            if (employees == null || employees.Count == 0)
-                throw new ArgumentException($"{nameof(employees)} is null or empty.", nameof(employees));
+    public void InsertBatch(IList<EmployeeSimple> employees)
+    {
+        if (employees == null || employees.Count == 0)
+            throw new ArgumentException($"{nameof(employees)} is null or empty.", nameof(employees));
 
-            InsertAll(employees);
-        }
+        using (var repository = new EmployeeSimpleRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        repository.InsertAll(employees);
     }
 }

@@ -1,15 +1,13 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Recipes.RepoDb.Models;
-using Recipes.BulkInsert;
+﻿using Recipes.BulkInsert;
+using Recipes.RepoDB.Models;
 
-namespace Recipes.RepoDb.BulkInsert
+namespace Recipes.RepoDB.BulkInsert;
+
+[TestClass]
+public class BulkInsertTests : BulkInsertTests<EmployeeSimple>
 {
-    [TestClass]
-    public class BulkInsertTests : BulkInsertTests<EmployeeSimple>
+    protected override IBulkInsertScenario<EmployeeSimple> GetScenario()
     {
-        protected override IBulkInsertScenario<EmployeeSimple> GetScenario()
-        {
-            return new BulkInsertScenario(Setup.ConnectionString);
-        }
+        return new BulkInsertScenario(Setup.ConnectionString);
     }
 }

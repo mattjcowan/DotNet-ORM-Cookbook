@@ -1,28 +1,26 @@
 ﻿using Recipes.Immutable;
-using Recipes.RepoDb.Models;
-using RepoDb;
-using RDB = RepoDb;
-using System;
-using System.Collections.Generic;
+using Recipes.RepoDB.Models;
+using RepoDb.Enumerations;
 using System.Collections.Immutable;
-using System.Linq;
-using Microsoft.Data.SqlClient;
 
-namespace Recipes.RepoDb.Immutable
+namespace Recipes.RepoDB.Immutable
 {
-    public class ImmutableScenario : BaseRepository<EmployeeClassification, SqlConnection>,
-        IImmutableScenario<ReadOnlyEmployeeClassification>
+    public class ImmutableScenario : IImmutableScenario<ReadOnlyEmployeeClassification>
     {
+        readonly string m_ConnectionString;
+
         public ImmutableScenario(string connectionString)
-            : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-        { }
+        {
+            m_ConnectionString = connectionString;
+        }
 
         public int Create(ReadOnlyEmployeeClassification classification)
         {
             if (classification == null)
                 throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
 
-            return Insert<int>(new EmployeeClassification(classification));
+            using (var repository = new ReadOnlyEmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.Insert<int>(classification);
         }
 
         public void Delete(ReadOnlyEmployeeClassification classification)
@@ -30,33 +28,35 @@ namespace Recipes.RepoDb.Immutable
             if (classification == null)
                 throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
 
-            Delete(new EmployeeClassification(classification));
+            using (var repository = new ReadOnlyEmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            repository.Delete(classification);
         }
 
         public void DeleteByKey(int employeeClassificationKey)
         {
-            Delete(employeeClassificationKey);
+            using (var repository = new ReadOnlyEmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            repository.Delete(employeeClassificationKey);
         }
 
         public ReadOnlyEmployeeClassification? FindByName(string employeeClassificationName)
         {
-            return Query(e => e.EmployeeClassificationName == employeeClassificationName)
-                .FirstOrDefault()?
-                .ToImmutable();
+            using (var repository = new ReadOnlyEmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.Query(e => e.EmployeeClassificationName == employeeClassificationName)
+                .FirstOrDefault();
         }
 
         public IReadOnlyList<ReadOnlyEmployeeClassification> GetAll()
         {
-            return QueryAll()
-                .Select(e => e.ToImmutable())
+            using (var repository = new ReadOnlyEmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.QueryAll()
                 .ToImmutableList();
         }
 
         public ReadOnlyEmployeeClassification? GetByKey(int employeeClassificationKey)
         {
-            return Query(employeeClassificationKey)
-                .FirstOrDefault()?
-                .ToImmutable();
+            using (var repository = new ReadOnlyEmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            return repository.Query(employeeClassificationKey)
+                .FirstOrDefault();
         }
 
         public void Update(ReadOnlyEmployeeClassification classification)
@@ -64,7 +64,8 @@ namespace Recipes.RepoDb.Immutable
             if (classification == null)
                 throw new ArgumentNullException(nameof(classification), $"{nameof(classification)} is null.");
 
-            base.Update(new EmployeeClassification(classification));
+            using (var repository = new ReadOnlyEmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance))
+            repository.Update(classification);
         }
     }
 }

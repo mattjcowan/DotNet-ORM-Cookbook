@@ -12,6 +12,7 @@
       "ADO.NET": "ADO.md",
       "Chain": "Chain.md",
       "Dapper": "Dapper.md",
+      "DbConnector": "DbConnector.md",
       "Entity Framework 6": "EF6.md",
       "Entity Framework Core": "EFCore.md",
       "LINQ to DB": "LinqToDB.md",
@@ -30,7 +31,7 @@
       "Operations with a Foreign Key based Lookup Table": {
         "FK Lookup table using an integer-based Foreign Key": "ModelWithLookupSimple.md",
         "FK Lookup table using an object-based Foreign Key": "ModelWithLookupComplex.md"
-      },
+      }
     },
     "Fetching data scenarios": {
       "Projecting with a Join": "Joins.md",
@@ -39,13 +40,14 @@
       "Paging Results": "Pagination.md",
       "Populate DataTable": "PopulateDataTable.md",
       "Reading a Salar Value from a Row": "ScalarValue.md",
-      "Reading a Single Column from a Table": "SingleColumn.md",
+      "Reading a Single Column from a Table": "SingleColumn.md"
     },
     "Advanced scenarios": {
       "Async Operations": "SingleModelCrudAsync.md",
       "Batch Inserts with Large Collections": "LargeBatch.md",
       "Bulk Inserts": "BulkInsert.md",
       "Connection Sharing": "ConnectionSharing.md",
+      "Multiple Databases": "MultipleDB.md",
       "Partial Updates": "PartialUpdate.md",
       "Transactions": "Transactions.md",
       "Upsert": "Upsert.md"
@@ -60,6 +62,13 @@
     "Auditing and history scenarios": {
       "Audit Columns": "AuditColumns.md",
       "Soft Delete": "SoftDelete.md"
+    },
+    "Multi-Tenancy scenarios": {
+      "Query Filter": "QueryFilter.md"
+    },
+    "Unknown Database scenarios": {
+      "Discover Tables and Columns": "DiscoverTablesAndColumns.md",
+      "Read from an Arbitrary Table": "ArbitraryTableRead.md"
     }
   }
 }

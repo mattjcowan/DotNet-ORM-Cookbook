@@ -53,6 +53,8 @@
 </li>
 <li class="tocentry"><a href="ConnectionSharing.htm">Connection Sharing</a>
 </li>
+<li class="tocentry"><a href="MultipleDB.htm">Multiple Databases</a>
+</li>
 <li class="tocentry"><a href="PartialUpdate.htm">Partial Updates</a>
 </li>
 <li class="tocentry current"><a class="current" href="Transactions.htm">Transactions</a>
@@ -64,6 +66,8 @@
 <li class="tocentry"><a href="#chain">Chain</a></li>
 
 <li class="tocentry"><a href="#dapper">Dapper</a></li>
+
+<li class="tocentry"><a href="#dbconnector">DbConnector</a></li>
 
 <li class="tocentry"><a href="#entity-framework-6">Entity Framework 6</a></li>
 
@@ -95,6 +99,12 @@
 </li>
 <li class="tocentry">
 <span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Auditingandhistoryscenarios.htm">Auditing and history scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="Multi-Tenancyscenarios.htm">Multi-Tenancy scenarios</a></span>
+</li>
+<li class="tocentry">
+<span class="navigationgroup"><i class="fa fa-caret-right"></i> <a href="UnknownDatabasescenarios.htm">Unknown Database scenarios</a></span>
 </li>
 </ul>
 				<div class="toc-footer">
@@ -165,8 +175,8 @@
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
         const string sql = @&quot;INSERT INTO HR.EmployeeClassification (EmployeeClassificationName)
-                    OUTPUT Inserted.EmployeeClassificationKey
-                    VALUES(@EmployeeClassificationName )&quot;;
+                        OUTPUT Inserted.EmployeeClassificationKey
+                        VALUES(@EmployeeClassificationName )&quot;;
 
         using (var con = OpenConnection())
         using (var trans = con.BeginTransaction())
@@ -190,8 +200,8 @@
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
         const string sql = @&quot;INSERT INTO HR.EmployeeClassification (EmployeeClassificationName)
-                    OUTPUT Inserted.EmployeeClassificationKey
-                    VALUES(@EmployeeClassificationName )&quot;;
+                        OUTPUT Inserted.EmployeeClassificationKey
+                        VALUES(@EmployeeClassificationName )&quot;;
 
         using (var con = OpenConnection())
         using (var trans = con.BeginTransaction(isolationLevel))
@@ -212,8 +222,8 @@
     public EmployeeClassification? GetByKey(int employeeClassificationKey)
     {
         const string sql = @&quot;SELECT ec.EmployeeClassificationKey, ec.EmployeeClassificationName
-                    FROM HR.EmployeeClassification ec
-                    WHERE ec.EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
+                        FROM HR.EmployeeClassification ec
+                        WHERE ec.EmployeeClassificationKey = @EmployeeClassificationKey;&quot;;
 
         using (var con = OpenConnection())
         using (var cmd = new SqlCommand(sql, con))
@@ -306,8 +316,8 @@
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
         var sql = @&quot;INSERT INTO HR.EmployeeClassification (EmployeeClassificationName)
-                    OUTPUT Inserted.EmployeeClassificationKey
-                    VALUES(@EmployeeClassificationName )&quot;;
+                        OUTPUT Inserted.EmployeeClassificationKey
+                        VALUES(@EmployeeClassificationName )&quot;;
 
         using (var con = OpenConnection())
         using (var trans = con.BeginTransaction())
@@ -329,8 +339,8 @@
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
         var sql = @&quot;INSERT INTO HR.EmployeeClassification (EmployeeClassificationName)
-                    OUTPUT Inserted.EmployeeClassificationKey
-                    VALUES(@EmployeeClassificationName )&quot;;
+                        OUTPUT Inserted.EmployeeClassificationKey
+                        VALUES(@EmployeeClassificationName )&quot;;
 
         using (var con = OpenConnection())
         using (var trans = con.BeginTransaction(isolationLevel))
@@ -350,6 +360,74 @@
     {
         using (var con = OpenConnection())
             return con.Get&lt;EmployeeClassification&gt;(employeeClassificationKey);
+    }
+}
+</code></pre>
+
+<h2 id="dbconnector">DbConnector<a class="headerlink" href="#dbconnector" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
+<p>DbConnector will automatically create transactions for all <code>Non-Query</code> executions or when invoking <code>WithIsolationLevel</code> and setting a proper isolation level.</p>
+<p>Otherwise, a custom transaction can be used and configured via the <code>Execute</code> functions.</p>
+<pre><code class="cs">public class TransactionsScenario : ScenarioBase, ITransactionsScenario&lt;EmployeeClassification&gt;
+{
+    public TransactionsScenario(string connectionString) : base(connectionString)
+    {
+    }
+
+    public int Create(EmployeeClassification classification, bool shouldRollBack)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+        var sql = @&quot;INSERT INTO HR.EmployeeClassification (EmployeeClassificationName)
+                        OUTPUT Inserted.EmployeeClassificationKey
+                        VALUES(@EmployeeClassificationName )&quot;;
+
+        using (var con = OpenConnection())
+        using (var trans = con.BeginTransaction())
+        {
+            //Set the custom transaction when invoking Execute
+            var result = DbConnector.Scalar&lt;int&gt;(sql, classification).Execute(trans);
+
+            if (shouldRollBack)
+                trans.Rollback();
+            else
+                trans.Commit();
+
+            return result;
+        }
+    }
+
+    public int CreateWithIsolationLevel(EmployeeClassification classification, bool shouldRollBack, IsolationLevel isolationLevel)
+    {
+        if (classification == null)
+            throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
+
+        var sql = @&quot;INSERT INTO HR.EmployeeClassification (EmployeeClassificationName)
+                        OUTPUT Inserted.EmployeeClassificationKey
+                        VALUES(@EmployeeClassificationName )&quot;;
+
+        using (var con = OpenConnection())
+        using (var trans = con.BeginTransaction(isolationLevel))
+        {
+            //Set the custom transaction when invoking Execute
+            var result = DbConnector.Scalar&lt;int&gt;(sql, classification).Execute(trans);
+
+            if (shouldRollBack)
+                trans.Rollback();
+            else
+                trans.Commit();
+
+            return result;
+        }
+    }
+
+    public EmployeeClassification? GetByKey(int employeeClassificationKey)
+    {
+        string sql = &quot;SELECT * FROM &quot; + EmployeeClassification.TableName + &quot; WHERE EmployeeClassificationKey = @employeeClassificationKey;&quot;;
+
+        return DbConnector.ReadFirstOrDefault&lt;EmployeeClassification&gt;(sql, new { employeeClassificationKey })
+                           .WithIsolationLevel(IsolationLevel.ReadCommitted) //Enable the use of a transaction
+                           .Execute();
     }
 }
 </code></pre>
@@ -430,7 +508,7 @@
         using (var context = CreateDbContext())
         using (var trans = context.Database.BeginTransaction())
         {
-            context.EmployeeClassification.Add(classification);
+            context.EmployeeClassifications.Add(classification);
             context.SaveChanges();
             var result = classification.EmployeeClassificationKey;
 
@@ -451,7 +529,7 @@
         using (var context = CreateDbContext())
         using (var trans = context.Database.BeginTransaction(isolationLevel))
         {
-            context.EmployeeClassification.Add(classification);
+            context.EmployeeClassifications.Add(classification);
             context.SaveChanges();
             var result = classification.EmployeeClassificationKey;
 
@@ -464,10 +542,10 @@
         }
     }
 
-    public EmployeeClassification GetByKey(int employeeClassificationKey)
+    public EmployeeClassification? GetByKey(int employeeClassificationKey)
     {
         using (var context = CreateDbContext())
-            return context.EmployeeClassification.Find(employeeClassificationKey);
+            return context.EmployeeClassifications.Find(employeeClassificationKey);
     }
 }
 </code></pre>
@@ -642,21 +720,25 @@
 
 <h2 id="repodb">RepoDb<a class="headerlink" href="#repodb" title="Permalink to this headline"><i class="fa fa-link" aria-hidden="true"></i></a></h2>
 <p>Simply call the <code>BeginTransaction()</code> method of the <code>DbConnection</code> object and pass the instance of <code>DbTransaction</code> when you are calling any of the operations.</p>
-<pre><code class="cs">public class TransactionsScenario : BaseRepository&lt;EmployeeClassification, SqlConnection&gt;,
-    ITransactionsScenario&lt;EmployeeClassification&gt;
+<pre><code class="cs">public class TransactionsScenario : ITransactionsScenario&lt;EmployeeClassification&gt;
 {
+    readonly string m_ConnectionString;
+
     public TransactionsScenario(string connectionString)
-        : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-    { }
+    {
+        m_ConnectionString = connectionString;
+    }
 
     public int Create(EmployeeClassification classification, bool shouldRollBack)
     {
         if (classification == null)
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
-        using (var transaction = CreateConnection().EnsureOpen().BeginTransaction())
+        var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance);
+
+        using (var transaction = repository.CreateConnection().EnsureOpen().BeginTransaction())
         {
-            var result = Insert&lt;int&gt;(classification, transaction: transaction);
+            var result = repository.Insert&lt;int&gt;(classification, transaction: transaction);
 
             if (shouldRollBack)
                 transaction.Rollback();
@@ -672,9 +754,11 @@
         if (classification == null)
             throw new ArgumentNullException(nameof(classification), $&quot;{nameof(classification)} is null.&quot;);
 
-        using (var transaction = CreateConnection().EnsureOpen().BeginTransaction(isolationLevel))
+        var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance);
+
+        using (var transaction = repository.CreateConnection().EnsureOpen().BeginTransaction(isolationLevel))
         {
-            var result = Insert&lt;int&gt;(classification, transaction: transaction);
+            var result = repository.Insert&lt;int&gt;(classification, transaction: transaction);
 
             if (shouldRollBack)
                 transaction.Rollback();
@@ -687,7 +771,9 @@
 
     public EmployeeClassification? GetByKey(int employeeClassificationKey)
     {
-        return Query(e =&gt; e.EmployeeClassificationKey == employeeClassificationKey).FirstOrDefault();
+        var repository = new EmployeeClassificationRepository(m_ConnectionString, ConnectionPersistency.Instance);
+
+        return repository.Query(e =&gt; e.EmployeeClassificationKey == employeeClassificationKey).FirstOrDefault();
     }
 }
 </code></pre>
@@ -709,9 +795,9 @@
 
         using (var db = _dbConnectionFactory.OpenDbConnection())
         {
-            using(var tx = db.OpenTransaction())
+            using (var tx = db.OpenTransaction())
             {
-                var result = (int) db.Insert(classification, true);
+                var result = (int)db.Insert(classification, true);
 
                 if (shouldRollBack)
                     tx.Rollback();
@@ -730,9 +816,9 @@
 
         using (var db = _dbConnectionFactory.OpenDbConnection())
         {
-            using(var tx = db.OpenTransaction(isolationLevel))
+            using (var tx = db.OpenTransaction(isolationLevel))
             {
-                var result = (int) db.Insert(classification, true);
+                var result = (int)db.Insert(classification, true);
 
                 if (shouldRollBack)
                     tx.Rollback();

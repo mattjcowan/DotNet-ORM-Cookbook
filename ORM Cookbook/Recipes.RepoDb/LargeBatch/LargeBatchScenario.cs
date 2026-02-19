@@ -1,42 +1,42 @@
-﻿using Microsoft.Data.SqlClient;
-using Recipes.LargeBatch;
-using Recipes.RepoDb.Models;
+﻿using Recipes.LargeBatch;
+using Recipes.RepoDB.Models;
 using RepoDb;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using RepoDb.Enumerations;
 
-using RDB = RepoDb;
+namespace Recipes.RepoDB.LargeBatch;
 
-namespace Recipes.RepoDb.LargeBatch
+public class LargeBatchScenario : ILargeBatchScenario<EmployeeSimple>
 {
-    public class LargeBatchScenario : BaseRepository<EmployeeSimple, SqlConnection>, ILargeBatchScenario<EmployeeSimple>
+    readonly string m_ConnectionString;
+
+    public LargeBatchScenario(string connectionString)
     {
-        public LargeBatchScenario(string connectionString)
-            : base(connectionString, RDB.Enumerations.ConnectionPersistency.Instance)
-        { }
+        m_ConnectionString = connectionString;
+    }
 
-        public int CountByLastName(string lastName)
-        {
-            return Query(e => e.LastName == lastName).Count();
-        }
+    public int CountByLastName(string lastName)
+    {
+        using (var repository = new EmployeeSimpleRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        return repository.Query(e => e.LastName == lastName).Count();
+    }
 
-        public int MaximumBatchSize => 2100 / 7;
+    public int MaximumBatchSize => 2100 / 7;
 
-        public void InsertLargeBatch(IList<EmployeeSimple> employees)
-        {
-            if (employees == null || employees.Count == 0)
-                throw new ArgumentException($"{nameof(employees)} is null or empty.", nameof(employees));
+    public void InsertLargeBatch(IList<EmployeeSimple> employees)
+    {
+        if (employees == null || employees.Count == 0)
+            throw new ArgumentException($"{nameof(employees)} is null or empty.", nameof(employees));
 
-            InsertAll(employees);
-        }
+        using (var repository = new EmployeeSimpleRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        repository.InsertAll(employees);
+    }
 
-        public void InsertLargeBatch(IList<EmployeeSimple> employees, int batchSize)
-        {
-            if (employees == null || employees.Count == 0)
-                throw new ArgumentException($"{nameof(employees)} is null or empty.", nameof(employees));
+    public void InsertLargeBatch(IList<EmployeeSimple> employees, int batchSize)
+    {
+        if (employees == null || employees.Count == 0)
+            throw new ArgumentException($"{nameof(employees)} is null or empty.", nameof(employees));
 
-            InsertAll(employees, batchSize: batchSize);
-        }
+        using (var repository = new EmployeeSimpleRepository(m_ConnectionString, ConnectionPersistency.Instance))
+        repository.InsertAll(employees, batchSize: batchSize);
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Recipes.EntityFrameworkCore.Entities;
-using System;
 
 namespace Recipes.EntityFrameworkCore.SingleModelCrud
 {
@@ -29,8 +28,9 @@ namespace Recipes.EntityFrameworkCore.SingleModelCrud
         {
             using (var context = CreateDbContext())
             {
-                var temp = new EmployeeClassification() { EmployeeClassificationKey = employeeClassificationKey };
-                context.Entry(temp).State = EntityState.Deleted;
+                //var temp = new EmployeeClassification() { EmployeeClassificationKey = employeeClassificationKey };
+                //context.Entry(temp).State = EntityState.Deleted;
+                context.EmployeeClassifications.Remove(new EmployeeClassification { EmployeeClassificationKey = employeeClassificationKey });
                 context.SaveChanges();
             }
         }
